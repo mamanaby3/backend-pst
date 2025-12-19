@@ -10,6 +10,7 @@
     "swagger:generate": "node generate-swagger.js"
   },
   "dependencies": {
+    "@angular/common": "^21.0.6",
     "bcrypt": "^6.0.0",
     "fast-glob": "^3.3.3",
     "jsonwebtoken": "^9.0.2",

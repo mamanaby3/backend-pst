@@ -80,3 +80,4 @@ export const authMiddleware = (req: Request) => {
         throw new Error("Invalid token");
     }
 };
+
