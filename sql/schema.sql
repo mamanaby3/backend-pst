@@ -243,26 +243,39 @@ CREATE TABLE incidents (
                                CHECK (status IN ('En cours', 'Resolu')),
     -- JSONB est excellent pour stocker les métadonnées des fichiers (nom, taille, url)
                            documents JSONB DEFAULT '[]'::jsonb,
-                           user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
                            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add user_id to the incidents table
+ALTER TABLE incidents ADD COLUMN user_id INTEGER NOT NULL REFERENCES users(id); -- Adjust 'users' to your actual table name
+
+-- Optional: Add an index for performance on user_id queries
+CREATE INDEX idx_incidents_user_id ON incidents(user_id);
+
 -- 3. Table des Notifications (Alertes système)
 CREATE TABLE notifications (
-                               id SERIAL PRIMARY KEY,
-                               libelle VARCHAR(150) NOT NULL,
-                               type VARCHAR(50) NOT NULL
-                                   CHECK (type IN ('BLOCAGE', 'ABSENCE', 'LITIGE', 'ANOMALIE', 'SYSTEME')),
+                               id SERIAL PRIMARY KEY  ,
+                               libelle VARCHAR(255) NOT NULL,
+                               type VARCHAR(100) NOT NULL,
                                description TEXT NOT NULL,
-                               emeteur_id INTEGER REFERENCES users(id), -- Lié à la table users
-                               date_evenement DATE NOT NULL DEFAULT CURRENT_DATE,
-                               image_url VARCHAR(255) NULL,
-                               is_read BOOLEAN DEFAULT FALSE,
-                               created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                               updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                               image_url VARCHAR(500),
+                               emetteur_id INT NOT NULL,  -- ID de l'utilisateur qui publie
+                               date_creation TIMESTAMP WITH TIME ZONE DEFAULT   CURRENT_TIMESTAMP,
+                               statut VARCHAR(20)
+                                   CHECK (statut IN('active', 'inactive') )DEFAULT 'active',
+                               FOREIGN KEY (emetteur_id) REFERENCES users(id)
 );
 
+CREATE TABLE notification_destinataires (
+                                            id SERIAL PRIMARY KEY  ,
+                                            notification_id INT NOT NULL,
+                                            destinataire_id INT,
+                                            lu BOOLEAN DEFAULT FALSE,
+                                            date_lecture TIMESTAMP WITH TIME ZONE DEFAULT   CURRENT_TIMESTAMP,
+                                            FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
+                                            FOREIGN KEY (destinataire_id) REFERENCES users(id)
+);
 -- 4. Fonction pour mettre à jour automatiquement le champ updated_at
 CREATE OR REPLACE FUNCTION update_modified_column()
     RETURNS TRIGGER AS $$
@@ -274,5 +287,3 @@ $$ language 'plpgsql';
 
 -- 5. Triggers pour l'automatisation
 CREATE TRIGGER update_incident_modtime BEFORE UPDATE ON incidents FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
-CREATE TRIGGER update_notification_modtime BEFORE UPDATE ON notifications FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
-COMMIT;

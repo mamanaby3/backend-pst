@@ -21,6 +21,7 @@ export function verifyToken(token?: string) {
     if (!token) return null;
     try {
         return jwt.verify(token, JWT_SECRET) as any;
+
     } catch {
         return null;
     }

@@ -92,68 +92,7 @@
  *       500:
  *         description: Erreur serveur
  *
- * components:
- *   schemas:
- *     CalendarEvent:
- *       type: object
- *       properties:
- *         id:
- *           type: integer
- *           example: 1
- *         title:
- *           type: string
- *           example: Vacances de Noël
- *         start_date:
- *           type: string
- *           format: date
- *           example: 2025-12-20
- *         end_date:
- *           type: string
- *           format: date
- *           example: 2026-01-05
- *         schoolId:
- *           type: integer
- *           nullable: true
- *           example: 3
- *         type:
- *           type: string
- *           enum: [HOLIDAY, FERIE]
- *
- *     CreateEventRequest:
- *       type: object
- *       required:
- *         - type
- *         - name
- *         - startDate
- *       properties:
- *         type:
- *           type: string
- *           enum: [HOLIDAY, FERIE]
- *           example: HOLIDAY
- *         schoolId:
- *           type: integer
- *           example: 1
- *         name:
- *           type: string
- *           example: Vacances d'été
- *         startDate:
- *           type: string
- *           format: date
- *           example: 2025-07-01
- *         endDate:
- *           type: string
- *           format: date
- *           example: 2025-09-01
- *
- *     CreateEventResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *           example: Vacances créées avec succès
- *         id:
- *           type: integer
- *           example: 12
+
  */
 
 
