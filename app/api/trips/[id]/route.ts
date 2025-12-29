@@ -3,156 +3,23 @@
  * /api/trips/{id}:
  *   get:
  *     summary: Récupérer un trajet par son ID
- *     tags: [Trips]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du trajet
- *     responses:
- *       200:
- *         description: Trajet trouvé
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 driver_id:
- *                   type: integer
- *                   example: 3
- *                 school_id:
- *                   type: integer
- *                   example: 2
- *                 start_point:
- *                   type: string
- *                   example: "Point A"
- *                 end_point:
- *                   type: string
- *                   example: "École ABC"
- *                 departure_time:
- *                   type: string
- *                   format: date-time
- *                   example: "2025-12-15T08:00:00Z"
- *                 capacity_max:
- *                   type: integer
- *                   example: 20
- *                 status:
- *                   type: string
- *                   example: "pending"
- *                 is_recurring:
- *                   type: boolean
- *                   example: false
- *       404:
- *         description: Trajet non trouvé
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   put:
  *     summary: Mettre à jour un trajet
- *     tags: [Trips]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du trajet
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               driver_id:
- *                 type: integer
- *                 example: 3
- *               school_id:
- *                 type: integer
- *                 example: 2
- *               start_point:
- *                 type: string
- *                 example: "Point A"
- *               end_point:
- *                 type: string
- *                 example: "École ABC"
- *               departure_time:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-12-15T08:00:00Z"
- *               capacity_max:
- *                 type: integer
- *                 example: 20
- *               status:
- *                 type: string
- *                 example: "pending"
- *               is_recurring:
- *                 type: boolean
- *                 example: false
- *     responses:
- *       200:
- *         description: Trajet mis à jour avec succès
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   patch:
  *     summary: Affecter un chauffeur à un trajet (si non déjà affecté)
- *     tags: [Trips]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du trajet
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               driver_id:
- *                 type: integer
- *                 example: 3
- *     responses:
- *       200:
- *         description: Chauffeur affecté avec succès
- *       400:
- *         description: Paramètres invalides (trip_id ou driver_id manquants)
- *       409:
- *         description: Trajet introuvable ou déjà affecté
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   delete:
  *     summary: Supprimer un trajet
- *     tags: [Trips]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du trajet
- *     responses:
- *       200:
- *         description: Trajet supprimé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 

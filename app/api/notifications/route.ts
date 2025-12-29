@@ -1,3 +1,28 @@
+/**
+ * @swagger
+ * /api/notifications:
+ *   get:
+ *     summary: Récupérer la liste des notifications
+ *     description: >
+ *       Retourne les notifications actives avec pagination, recherche
+ *       et statistiques de lecture (destinataires / lus).
+ *     tags: [ADMIN]
+ *     security:
+ *       - bearerAuth: []
+
+ *   post:
+ *     summary: Créer une notification
+ *     description: >
+ *       Crée une notification émise par l'utilisateur connecté.
+ *       Elle peut être envoyée à tous les utilisateurs ou à des utilisateurs spécifiques.
+ *     tags: [ADMIN]
+ *     security:
+ *       - bearerAuth: []
+
+ */
+
+
+
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserFromRequest } from "@/lib/auth";
@@ -13,7 +38,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { libelle, type, description, imageUrl, destinataireIds } =
+        const { libelle, type, description, imageUrl, destinataireIds, sendToAll } =
             await request.json();
 
         if (!libelle || !type || !description) {
@@ -24,32 +49,30 @@ export async function POST(request: NextRequest) {
         }
 
         try {
-            // ✅ DÉBUT Transaction
+            // DÉBUT Transaction
             await query('BEGIN');
 
-            // ✅ CORRECTION: PostgreSQL utilise $1, $2... pas ?
-            // ✅ CORRECTION: RETURNING id pour récupérer l'ID
             const insertNotif = await query(
                 `INSERT INTO notifications
-                 (libelle, type, description, image_url, emetteur_id)
+                     (libelle, type, description, image_url, emetteur_id)
                  VALUES ($1, $2, $3, $4, $5)
-                 RETURNING id`,
+                     RETURNING id`,
                 [libelle, type, description, imageUrl || null, user.id]
             );
 
             const notificationId = insertNotif.rows[0].id;
 
-            // ✅ Insérer les destinataires
-            if (!destinataireIds || destinataireIds.length === 0) {
-                // Pour TOUS les utilisateurs
+            // Insérer les destinataires
+            if (sendToAll === true) {
+                // Pour TOUS les utilisateurs - une seule ligne avec destinataire_id NULL
                 await query(
                     `INSERT INTO notification_destinataires
-                     (notification_id, destinataire_id, lu)
+                         (notification_id, destinataire_id, lu)
                      VALUES ($1, NULL, false)`,
                     [notificationId]
                 );
-            } else {
-                // Pour des utilisateurs spécifiques
+            } else if (destinataireIds && destinataireIds.length > 0) {
+                // Pour des utilisateurs spécifiques- destinataire_id sera charge
                 for (const userId of destinataireIds) {
                     await query(
                         `INSERT INTO notification_destinataires
@@ -58,6 +81,13 @@ export async function POST(request: NextRequest) {
                         [notificationId, userId]
                     );
                 }
+            } else {
+                // Aucun destinataire sélectionné - erreur
+                await query('ROLLBACK');
+                return NextResponse.json(
+                    { error: 'Veuillez sélectionner au moins un destinataire ou cocher "Envoyer à tous"' },
+                    { status: 400 }
+                );
             }
 
             await query('COMMIT');
@@ -81,7 +111,6 @@ export async function POST(request: NextRequest) {
 }
 
 
-
 export async function GET(request: NextRequest) {
     try {
         const user = await getUserFromRequest(request);
@@ -95,7 +124,7 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const page = Number(searchParams.get('page') || 1);
-        const limit = Number(searchParams.get('limit') || 10);
+        const limit = Number(searchParams.get('limit') || 6);
         const search = searchParams.get('search') || '';
         const offset = (page - 1) * limit;
 

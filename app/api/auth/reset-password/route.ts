@@ -10,56 +10,7 @@ import { hashPassword } from "@/lib/auth";
  *     summary: Réinitialisation du mot de passe avec code OTP
  *     description: Vérifie le code OTP fourni et met à jour le mot de passe de l'utilisateur si le code est valide et non expiré.
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: integer
- *                 description: ID de l'utilisateur
- *                 example: 1
- *               code:
- *                 type: string
- *                 description: Code OTP reçu par email ou SMS
- *                 example: "1234"
- *               newPassword:
- *                 type: string
- *                 description: Nouveau mot de passe de l'utilisateur
- *                 example: "newSecret123"
- *     responses:
- *       200:
- *         description: Mot de passe réinitialisé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Mot de passe réinitialisé avec succès"
- *       400:
- *         description: Code invalide ou expiré
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Code invalide ou expiré"
- *       500:
- *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unknown error"
+
  */
 
 

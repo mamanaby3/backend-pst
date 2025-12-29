@@ -12,56 +12,7 @@
  *       - Auth
  *     security:
  *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Profil utilisateur récupéré avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 7
- *                 firstName:
- *                   type: string
- *                   example: "Mame"
- *                 lastName:
- *                   type: string
- *                   example: "Dramé"
- *                 role:
- *                   type: string
- *                   example: "admin"
- *                 status:
- *                   type: string
- *                   example: "active"
- *                 phone:
- *                   type: string
- *                   example: "+221770000000"
- *                 email:
- *                   type: string
- *                   example: "user@email.com"
- *       401:
- *         description: Non autorisé ou token invalide
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Non autorisé"
- *       404:
- *         description: Utilisateur introuvable
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Utilisateur introuvable"
- */
+  */
 
 
 

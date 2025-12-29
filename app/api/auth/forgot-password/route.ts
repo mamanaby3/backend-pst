@@ -9,48 +9,7 @@ import {createPasswordResetCode, sendCodeByEmail, sendCodeBySMS} from "@/service
  *     summary: Demande de réinitialisation de mot de passe
  *     description: Envoie un code OTP à l'utilisateur pour réinitialiser son mot de passe. Le code peut être envoyé par email ou par SMS selon le contact fourni.
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               contact:
- *                 type: string
- *                 description: Email ou numéro de téléphone de l'utilisateur
- *                 example: "john@example.com"
- *     responses:
- *       200:
- *         description: Code de réinitialisation envoyé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Code de réinitialisation envoyé"
- *       404:
- *         description: Utilisateur introuvable
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Utilisateur introuvable"
- *       500:
- *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unknown error"
+
  */
 
 export async function POST(req: Request) {

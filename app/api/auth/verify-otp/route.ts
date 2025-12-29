@@ -8,50 +8,7 @@ import { query } from "@/lib/db";
  *     summary: Vérifie le code OTP
  *     description: Vérifie si le code OTP saisi par l'utilisateur correspond à celui généré pour réinitialiser le mot de passe.
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               userId:
- *                 type: integer
- *                 example: 1
- *               code:
- *                 type: string
- *                 example: "7425"
- *     responses:
- *       200:
- *         description: OTP correct
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Code OTP vérifié"
- *       400:
- *         description: OTP invalide ou expiré
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Code OTP invalide ou expiré"
- *       500:
- *         description: Erreur serveur
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Unknown error"
+
  */
 
 export async function POST(req: Request) {

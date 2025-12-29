@@ -3,73 +3,13 @@
  * /api/drivers:
  *   get:
  *     summary: Récupérer tous les chauffeurs
- *     tags: [Drivers]
- *     responses:
- *       200:
- *         description: Liste des chauffeurs
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   name:
- *                     type: string
- *                     example: Moussa Diop
- *                   phone:
- *                     type: string
- *                     example: 771234567
- *                   license_number:
- *                     type: string
- *                     example: SN12345
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   post:
  *     summary: Créer un nouveau chauffeur
- *     tags: [Drivers]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: Moussa Diop
- *               phone:
- *                 type: string
- *                 example: 771234567
- *               license_number:
- *                 type: string
- *                 example: SN12345
- *     responses:
- *       201:
- *         description: Chauffeur créé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 5
- *                 name:
- *                   type: string
- *                   example: Moussa Diop
- *                 phone:
- *                   type: string
- *                   example: 771234567
- *                 license_number:
- *                   type: string
- *                   example: SN12345
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 import { NextResponse } from "next/server";
 import { getAllDrivers, createDriver } from "@/services/driverServices";

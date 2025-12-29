@@ -3,164 +3,22 @@
  * /api/schools/{id}:
  *   get:
  *     summary: Récupérer une école par son ID
- *     tags: [Schools]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de l'école
- *     responses:
- *       200:
- *         description: École trouvée
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 name:
- *                   type: string
- *                   example: École Primaire ABC
- *                 address:
- *                   type: string
- *                   example: 123 Rue Principale, Dakar
- *                 opening_time:
- *                   type: string
- *                   example: 08:00
- *                 closing_time:
- *                   type: string
- *                   example: 18:00
- *                 logo_url:
- *                   type: string
- *                   example: /uploads/schools/school_1690000000.png
- *                 schedule:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       day:
- *                         type: string
- *                         example: Lundi
- *                       open:
- *                         type: boolean
- *                         example: true
- *                       openTime:
- *                         type: string
- *                         example: 08:00
- *                       closeTime:
- *                         type: string
- *                         example: 18:00
- *                 status:
- *                   type: string
- *                   example: Actif
- *       404:
- *         description: École non trouvée
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   put:
  *     summary: Mettre à jour une école (inclus logo et horaires)
- *     tags: [Schools]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de l'école
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: École Primaire ABC
- *               address:
- *                 type: string
- *                 example: 123 Rue Principale, Dakar
- *               opening_time:
- *                 type: string
- *                 example: 08:00
- *               closing_time:
- *                 type: string
- *                 example: 18:00
- *               schedule:
- *                 type: string
- *                 description: JSON encodé des horaires (optionnel)
- *                 example: '[{"day":"Lundi","open":true,"openTime":"08:00","closeTime":"18:00"}]'
- *               logo:
- *                 type: string
- *                 format: binary
- *                 description: Logo de l'école (optionnel)
- *     responses:
- *       200:
- *         description: École mise à jour avec succès
- *       400:
- *         description: Requête invalide (nom ou adresse manquants)
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   patch:
  *     summary: Mettre à jour le statut d'une école
- *     tags: [Schools]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de l'école
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               status:
- *                 type: string
- *                 enum: [Actif, Inactif]
- *                 example: Actif
- *     responses:
- *       200:
- *         description: Statut mis à jour avec succès
- *       400:
- *         description: Statut invalide
- *       404:
- *         description: École non trouvée
- *       500:
- *         description: Erreur serveur
- *
+ *     tags: [ADMIN]
+
  *   delete:
  *     summary: Supprimer une école
- *     tags: [Schools]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID de l'école
- *     responses:
- *       200:
- *         description: École supprimée avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 

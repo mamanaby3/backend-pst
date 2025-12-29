@@ -1,8 +1,25 @@
+/**
+ * @swagger
+ * /api/notifications/user:
+ *   get:
+ *     summary: Récupérer les notifications de l'utilisateur connecté
+ *     description: >
+ *       Retourne les notifications actives destinées à l'utilisateur connecté
+ *       (personnelles ou globales), avec pagination et nombre de notifications non lues.
+ *     tags: [ ADMIN]
+ *     security:
+ *       - bearerAuth: []
+
+ */
+
+
+
+
 import {getUserFromRequest} from "@/lib/auth";
 import {NextRequest, NextResponse} from "next/server";
 import {query} from "@/lib/db";
 
-export async function GET_USER_NOTIFS(request: NextRequest) {
+export async function GET(request: NextRequest) {
     try {
         const user = await getUserFromRequest(request);
 
@@ -15,33 +32,53 @@ export async function GET_USER_NOTIFS(request: NextRequest) {
         const limit = Number(searchParams.get('limit') || 10);
         const offset = (page - 1) * limit;
 
+        // Déterminer si l'utilisateur est admin
+        const isAdmin = user.role === 'admin';
+
+
+        let whereCondition = '';
+        let queryParams = [];
+
+        if (isAdmin) {
+            // Admin : notifications où destinataire_id = son ID
+            whereCondition = 'nd.destinataire_id = $1';
+            queryParams = [user.id, limit, offset];
+        } else {
+            // User normal (Parent ou Driver): notifications globales (destinataire_id IS NULL)
+            whereCondition = 'nd.destinataire_id IS NULL';
+            queryParams = [limit, offset];
+        }
+
         // Notifications paginées
-        const notificationsResult = await query(
-            `SELECT
+        const notificationsQuery = `
+            SELECT
                 n.*,
-                CONCAT(u.nom, ' ', u.prenom) AS emetteur_nom,
+                u.name AS emetteur_nom,
                 nd.lu,
                 nd.date_lecture
-             FROM notifications n
-             INNER JOIN notification_destinataires nd ON n.id = nd.notification_id
-             LEFT JOIN users u ON u.id = n.emetteur_id
-             WHERE n.statut = 'active'
-               AND (nd.destinataire_id = $1 OR nd.destinataire_id IS NULL)
-             ORDER BY n.date_creation DESC
-             LIMIT $2 OFFSET $3`,
-            [user.id, limit, offset]
-        );
+            FROM notifications n
+            INNER JOIN notification_destinataires nd ON n.id = nd.notification_id
+            LEFT JOIN users u ON u.id = n.emetteur_id
+            WHERE n.statut = 'active'
+              AND ${whereCondition}
+            ORDER BY n.date_creation DESC
+            LIMIT $${isAdmin ? 2 : 1} OFFSET $${isAdmin ? 3 : 2}
+        `;
+
+        const notificationsResult = await query(notificationsQuery, queryParams);
 
         // Nombre de non lues
-        const unreadResult = await query(
-            `SELECT COUNT(*) AS unread
-             FROM notification_destinataires nd
-             INNER JOIN notifications n ON n.id = nd.notification_id
-             WHERE (nd.destinataire_id = $1 OR nd.destinataire_id IS NULL)
-               AND nd.lu = false
-               AND n.statut = 'active'`,
-            [user.id]
-        );
+        const unreadQuery = `
+            SELECT COUNT(*) AS unread
+            FROM notification_destinataires nd
+            INNER JOIN notifications n ON n.id = nd.notification_id
+            WHERE ${whereCondition}
+              AND nd.lu = false
+              AND n.statut = 'active'
+        `;
+
+        const unreadParams = isAdmin ? [user.id] : [];
+        const unreadResult = await query(unreadQuery, unreadParams);
 
         return NextResponse.json({
             notifications: notificationsResult.rows,

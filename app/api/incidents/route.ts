@@ -6,54 +6,8 @@
  *     description: >
  *       Retourne les incidents avec recherche, pagination et tri par date de création.
  *     tags:
- *       - Incidents
- *     parameters:
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *         description: Recherche sur le type de problème ou la description
- *
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *           default: 1
- *         description: Numéro de page
- *
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
- *         description: Nombre d’éléments par page
- *
- *     responses:
- *       200:
- *         description: Liste paginée des incidents
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 incidents:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Incident'
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     page:
- *                       type: integer
- *                     limit:
- *                       type: integer
- *                     total:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *
- *       500:
- *         description: Erreur serveur
+ *       - ADMIN
+
  */
 /**
  * @swagger
@@ -63,50 +17,8 @@
  *     description: >
  *       Permet de créer un incident avec 1 à 3 documents obligatoires.
  *     tags:
- *       - Incidents
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - type_de_problem
- *               - description
- *               - user_id
- *             properties:
- *               type_de_problem:
- *                 type: string
- *                 example: Blocage administratif
- *               description:
- *                 type: string
- *                 example: Le dossier est bloqué depuis plusieurs jours
- *               user_id:
- *                 type: integer
- *                 example: 5
- *               documents[0]:
- *                 type: string
- *                 format: binary
- *               documents[1]:
- *                 type: string
- *                 format: binary
- *               documents[2]:
- *                 type: string
- *                 format: binary
- *
- *     responses:
- *       201:
- *         description: Incident créé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Incident'
- *
- *       400:
- *         description: Données invalides ou documents manquants
- *
- *       500:
- *         description: Erreur serveur
+ *       - ADMIN
+
  */
 
 import { query } from '@/lib/db';

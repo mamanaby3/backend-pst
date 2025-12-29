@@ -106,7 +106,7 @@ CREATE TABLE trips (
                        date TIMESTAMP,
                        start_time TIME,
                        end_time TIME,
-                       status VARCHAR(20) DEFAULT 'En cours' CHECK (status IN ('En cours','Termine','Annule' )),
+                       status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending','completed','canceled' )),
                        is_recurring BOOLEAN DEFAULT FALSE,
                        created_at TIMESTAMP DEFAULT now()
 );

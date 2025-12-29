@@ -7,9 +7,6 @@ import { NextResponse } from "next/server";
  *     summary: Déconnexion d'un utilisateur
  *     description: Supprime le token côté client (JWT côté front) pour simuler la déconnexion.
  *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Déconnexion réussie
  */
 
 

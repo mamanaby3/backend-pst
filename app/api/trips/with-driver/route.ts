@@ -3,63 +3,8 @@
  * /api/trips/with-driver:
  *   get:
  *     summary: Récupérer tous les trajets   affectés a un chauffeur
- *     tags: [Trips]
- *     responses:
- *       200:
- *         description: Liste des trajets
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   driver_id:
- *                     type: integer
- *                     example: 3
- *                   start_point:
- *                     type: string
- *                     example: "Point A"
- *                   end_point:
- *                     type: string
- *                     example: "École ABC"
- *                   departure_time:
- *                     type: string
- *                     format: date-time
- *                     example: "2025-12-15T08:00:00Z"
- *                   capacity_max:
- *                     type: integer
- *                     example: 20
- *                   status:
- *                     type: string
- *                     example: "pending"
- *                   is_recurring:
- *                     type: boolean
- *                     example: false
- *                   created_at:
- *                     type: string
- *                     format: date-time
- *                     example: "2025-12-10T12:00:00Z"
- *                   driver_user_id:
- *                     type: integer
- *                     example: 7
- *                   driver_name:
- *                     type: string
- *                     example: "John Doe"
- *                   driver_phone:
- *                     type: string
- *                     example: "+221770000000"
- *                   school_name:
- *                     type: string
- *                     example: "École ABC"
- *                   current_passengers:
- *                     type: integer
- *                     example: 15
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 import { NextResponse } from "next/server";

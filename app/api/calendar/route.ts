@@ -6,94 +6,17 @@
  *     description: >
  *       Retourne les vacances scolaires (si schoolId est fourni)
  *       ou les jours fériés pour un mois et une année donnés.
- *     tags: [Calendrier]
- *     parameters:
- *       - name: month
- *         in: query
- *         required: true
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 12
- *         description: Mois (1 à 12)
- *       - name: year
- *         in: query
- *         required: true
- *         schema:
- *           type: integer
- *         description: Année
- *       - name: schoolId
- *         in: query
- *         required: false
- *         schema:
- *           type: integer
- *         description: Identifiant de l’école
- *     responses:
- *       200:
- *         description: Liste des événements
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/CalendarEvent'
- *       400:
- *         description: Paramètres invalides
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   post:
  *     summary: Créer un événement
  *     description: >
  *       Crée un événement de type vacances scolaires (HOLIDAY)
  *       ou jour férié (FERIE).
- *     tags: [Calendrier]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CreateEventRequest'
- *     responses:
- *       200:
- *         description: Événement créé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/CreateEventResponse'
- *       400:
- *         description: Données invalides
- *       500:
- *         description: Erreur serveur
- *
- *   delete:
- *     summary: Supprimer un événement
- *     description: Supprime un événement existant selon son type.
- *     tags: [Calendrier]
- *     parameters:
- *       - name: id
- *         in: query
- *         required: true
- *         schema:
- *           type: integer
- *         description: Identifiant de l’événement
- *       - name: type
- *         in: query
- *         required: true
- *         schema:
- *           type: string
- *           enum: [HOLIDAY, FERIE]
- *         description: Type d’événement
- *     responses:
- *       200:
- *         description: Événement supprimé
- *       400:
- *         description: Paramètres manquants ou invalides
- *       500:
- *         description: Erreur serveur
- *
+ *     tags: [ADMIN]
 
- */
+*/
 
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -256,44 +179,6 @@ export async function POST(req: NextRequest) {
         console.error('Erreur POST /api/calendar:', error);
         return NextResponse.json(
             { error: 'Erreur serveur lors de la création de l\'événement' },
-            { status: 500 }
-        );
-    }
-}
-
-/**
- * DELETE /api/calendar/:id
- * Supprime un événement
- */
-export async function DELETE(req: NextRequest) {
-    try {
-        const { searchParams } = new URL(req.url);
-        const id = searchParams.get('id');
-        const type = searchParams.get('type');
-
-        if (!id || !type) {
-            return NextResponse.json(
-                { error: 'Paramètres manquants: id et type requis' },
-                { status: 400 }
-            );
-        }
-
-        if (type === 'HOLIDAY') {
-            await query('DELETE FROM school_vacations WHERE id = $1', [id]);
-        } else if (type === 'FERIE') {
-            await query('DELETE FROM public_holidays WHERE id = $1', [id]);
-        } else {
-            return NextResponse.json(
-                { error: 'Type invalide' },
-                { status: 400 }
-            );
-        }
-
-        return NextResponse.json({ message: 'Événement supprimé avec succès' });
-    } catch (error) {
-        console.error('Erreur DELETE /api/calendar:', error);
-        return NextResponse.json(
-            { error: 'Erreur serveur lors de la suppression' },
             { status: 500 }
         );
     }

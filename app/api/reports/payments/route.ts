@@ -7,63 +7,8 @@
  *       Cette API génère un rapport des paiements pour un mois et une année spécifiques.
  *       Le rapport peut être exporté en PDF ou en Excel.
  *     tags:
- *       - Rapports
- *     parameters:
- *       - in: query
- *         name: month
- *         schema:
- *           type: integer
- *           minimum: 1
- *           maximum: 12
- *         required: true
- *         description: Mois du rapport (1-12)
- *       - in: query
- *         name: year
- *         schema:
- *           type: integer
- *           example: 2025
- *         required: true
- *         description: Année du rapport
- *       - in: query
- *         name: format
- *         schema:
- *           type: string
- *           enum: [pdf, excel]
- *           default: pdf
- *         required: false
- *         description: Format de sortie du rapport
- *     responses:
- *       200:
- *         description: Rapport généré avec succès
- *         content:
- *           application/pdf:
- *             schema:
- *               type: string
- *               format: binary
- *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
- *             schema:
- *               type: string
- *               format: binary
- *       400:
- *         description: Paramètres invalides ou requis manquants
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "month et year requis"
- *       500:
- *         description: Erreur serveur lors de la génération du rapport
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *                   example: "Erreur génération rapport"
+ *       - ADMIN
+
  */
 
 

@@ -3,34 +3,8 @@
  * /api/drivers/{id}/status:
 *   patch:
     *     summary: Mettre à jour le statut d'un chauffeur (admin uniquement)
-*     tags: [Drivers]
-*     parameters:
-*       - in: path
-*         name: id
-*         schema:
-*           type: integer
-*         required: true
-*         description: ID du chauffeur
-*     requestBody:
-*       required: true
-*       content:
-*         application/json:
-*           schema:
-    *             type: object
-*             properties:
-*               status:
-    *                 type: string
-*                 enum: [Approuvé, Refusé, approved, rejected]
-*                 example: Approuvé
-*     responses:
-*       200:
-*         description: Statut mis à jour avec succès
-*       400:
-*         description: ID ou statut invalide
-*       403:
-*         description: Accès refusé (non admin)
-*       500:
-*         description: Erreur serveur
+*     tags: [ADMIN]
+
 */
 
 import { NextResponse } from "next/server";
@@ -46,7 +20,7 @@ export async function PATCH(
         ? await context.params
         : context.params;
     try {
-        console.log('PATCH /api/drivers/[id]/status - Début');
+        console.log('PATCH /api/drivers/[id]]/status - Début');
         console.log('Params:', params);
 
         // Vérifier l'authentification

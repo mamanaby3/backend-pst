@@ -3,42 +3,12 @@
  * /api/users:
  *   get:
  *     summary: Récupérer tous les utilisateurs (admin uniquement)
- *     tags: [Users]
- *     responses:
- *       200:
- *         description: Liste des utilisateurs
- *       403:
- *         description: Accès refusé (non admin)
- *       500:
- *         description: Erreur serveur
- *
+ *     tags: [ADMIN]
+
  *   post:
  *     summary: Créer un utilisateur
- *     tags: [Users]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: John Doe
- *               email:
- *                 type: string
- *                 example: john@example.com
- *               password:
- *                 type: string
- *                 example: secret123
- *               role:
- *                 type: string
- *                 example: parent
- *     responses:
- *       200:
- *         description: Utilisateur créé avec succès
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 import { NextResponse } from "next/server";
 import { createUser, getAllUsers } from "@/services/userServices";

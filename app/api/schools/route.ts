@@ -3,132 +3,13 @@
  * /api/schools:
  *   get:
  *     summary: Récupérer toutes les écoles
- *     tags: [Schools]
- *     responses:
- *       200:
- *         description: Liste des écoles
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   name:
- *                     type: string
- *                     example: École Primaire ABC
- *                   address:
- *                     type: string
- *                     example: 123 Rue Principale, Dakar
- *                   opening_time:
- *                     type: string
- *                     example: 08:00
- *                   closing_time:
- *                     type: string
- *                     example: 18:00
- *                   logo_url:
- *                     type: string
- *                     example: /uploads/schools/school_1690000000.png
- *                   schedule:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         day:
- *                           type: string
- *                           example: Lundi
- *                         open:
- *                           type: boolean
- *                           example: true
- *                         openTime:
- *                           type: string
- *                           example: 08:00
- *                         closeTime:
- *                           type: string
- *                           example: 18:00
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   post:
  *     summary: Créer une nouvelle école
- *     tags: [Schools]
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: École Primaire ABC
- *               address:
- *                 type: string
- *                 example: 123 Rue Principale, Dakar
- *               opening_time:
- *                 type: string
- *                 example: 08:00
- *               closing_time:
- *                 type: string
- *                 example: 18:00
- *               schedule:
- *                 type: string
- *                 description: JSON encodé des horaires (optionnel)
- *                 example: '[{"day":"Lundi","open":true,"openTime":"08:00","closeTime":"18:00"}]'
- *               logo:
- *                 type: string
- *                 format: binary
- *                 description: Logo de l'école (optionnel)
- *     responses:
- *       201:
- *         description: École créée avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 name:
- *                   type: string
- *                   example: École Primaire ABC
- *                 address:
- *                   type: string
- *                   example: 123 Rue Principale, Dakar
- *                 opening_time:
- *                   type: string
- *                   example: 08:00
- *                 closing_time:
- *                   type: string
- *                   example: 18:00
- *                 logo_url:
- *                   type: string
- *                   example: /uploads/schools/school_1690000000.png
- *                 schedule:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       day:
- *                         type: string
- *                         example: Lundi
- *                       open:
- *                         type: boolean
- *                         example: true
- *                       openTime:
- *                         type: string
- *                         example: 08:00
- *                       closeTime:
- *                         type: string
- *                         example: 18:00
- *       400:
- *         description: Requête invalide (nom ou adresse manquants)
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 

@@ -11,29 +11,7 @@ import { signToken } from "@/lib/auth";
  *     summary: Connexion d’un utilisateur
  *     description: Permet à un utilisateur de se connecter et de recevoir un token JWT.
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *               - password
- *             properties:
- *               email:
- *                 type: string
- *                 example: utilisateur@example.com
- *               password:
- *                 type: string
- *                 example: motdepasse123
- *     responses:
- *       200:
- *         description: Authentification réussie
- *       401:
- *         description: Identifiants incorrects
- *       404:
- *         description: Utilisateur introuvable
+
  */
 
 

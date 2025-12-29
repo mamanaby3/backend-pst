@@ -2,7 +2,7 @@ import {NextRequest, NextResponse} from "next/server";
 import {query} from "@/lib/db";
 import {getUserFromRequest} from "@/lib/auth";
 
-export async function GET_DETAIL(
+export async function GET(
     request: NextRequest,
     { params }: { params: { id: string } }
 ) {
@@ -19,7 +19,7 @@ export async function GET_DETAIL(
         const notifResult = await query(
             `SELECT
                 n.*,
-                CONCAT(u.nom, ' ', u.prenom) as emetteur_nom
+                u.name as emetteur_nom
              FROM notifications n
              LEFT JOIN users u ON n.emetteur_id = u.id
              WHERE n.id = $1`,
@@ -37,7 +37,7 @@ export async function GET_DETAIL(
         const destResult = await query(
             `SELECT
                 nd.*,
-                CONCAT(u.nom, ' ', u.prenom) as destinataire_nom
+                  u.name as destinataire_nom
              FROM notification_destinataires nd
              LEFT JOIN users u ON nd.destinataire_id = u.id
              WHERE nd.notification_id = $1`,
@@ -54,9 +54,8 @@ export async function GET_DETAIL(
     }
 }
 
-// ============================================
-// 4. API: SUPPRIMER NOTIFICATION
-// ============================================
+
+//   SUPPRIMER NOTIFICATION
 export async function DELETE_NOTIF(
     request: NextRequest,
     { params }: { params: { id: string } }
@@ -70,7 +69,7 @@ export async function DELETE_NOTIF(
 
         const notificationId = params.id;
 
-        // ✅ CORRECTION: Utiliser $1 pour PostgreSQL
+
         await query(
             `UPDATE notifications SET statut = 'inactive' WHERE id = $1`,
             [notificationId]

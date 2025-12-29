@@ -3,96 +3,12 @@
  * /api/trips:
  *   get:
  *     summary: Récupérer tous les trajets
- *     tags: [Trips]
- *     responses:
- *       200:
- *         description: Liste des trajets
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: integer
- *                     example: 1
- *                   start_point:
- *                     type: string
- *                     example: "Point A"
- *                   end_point:
- *                     type: string
- *                     example: "École ABC"
- *       500:
- *         description: Erreur serveur
- *
+ *     tags: [ADMIN]
+
  *   post:
  *     summary: Créer un nouveau trajet
- *     tags: [Trips]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               driver_id:
- *                 type: integer
- *                 example: 3
- *               school_id:
- *                 type: integer
- *                 example: 2
- *               start_point:
- *                 type: string
- *                 example: "Point A"
- *               end_point:
- *                 type: string
- *                 example: "École ABC"
- *               departure_time:
- *                 type: string
- *                 format: date-time
- *                 example: "2025-12-15T08:00:00Z"
- *               capacity_max:
- *                 type: integer
- *                 example: 20
- *               is_recurring:
- *                 type: boolean
- *                 example: false
- *     responses:
- *       201:
- *         description: Trajet créé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 driver_id:
- *                   type: integer
- *                   example: 3
- *                 school_id:
- *                   type: integer
- *                   example: 2
- *                 start_point:
- *                   type: string
- *                   example: "Point A"
- *                 end_point:
- *                   type: string
- *                   example: "École ABC"
- *                 departure_time:
- *                   type: string
- *                   format: date-time
- *                   example: "2025-12-15T08:00:00Z"
- *                 capacity_max:
- *                   type: integer
- *                   example: 20
- *                 is_recurring:
- *                   type: boolean
- *                   example: false
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 

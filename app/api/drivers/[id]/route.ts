@@ -3,89 +3,17 @@
  * /api/drivers/{id}:
  *   get:
  *     summary: Récupérer un chauffeur par son ID
- *     tags: [Drivers]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du chauffeur
- *     responses:
- *       200:
- *         description: Chauffeur trouvé
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                   example: 1
- *                 name:
- *                   type: string
- *                   example: Moussa Diop
- *                 phone:
- *                   type: string
- *                   example: 771234567
- *                 license_number:
- *                   type: string
- *                   example: SN12345
- *                 status:
- *                   type: string
- *                   example: Approuvé
- *       404:
- *         description: Chauffeur non trouvé
- *       500:
- *         description: Erreur serveur
- *
+ *     tags: [ADMIN]
+
  *   put:
  *     summary: Mettre à jour un chauffeur
- *     tags: [Drivers]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du chauffeur
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: Moussa Diop
- *               phone:
- *                 type: string
- *                 example: 771234567
- *               license_number:
- *                 type: string
- *                 example: SN12345
- *     responses:
- *       200:
- *         description: Chauffeur mis à jour avec succès
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  *
  *   delete:
  *     summary: Supprimer un chauffeur
- *     tags: [Drivers]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: ID du chauffeur
- *     responses:
- *       200:
- *         description: Chauffeur supprimé avec succès
- *       500:
- *         description: Erreur serveur
+ *     tags: [ADMIN]
+
  */
 
 import { NextResponse } from "next/server";

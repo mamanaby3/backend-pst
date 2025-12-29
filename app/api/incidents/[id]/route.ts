@@ -1,4 +1,4 @@
-// app/api/incidents/[id]/route.ts
+
 import { query } from '@/lib/db';
 import { NextResponse } from 'next/server';
 

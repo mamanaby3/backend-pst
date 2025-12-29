@@ -15,7 +15,6 @@ export async function PUT_READ(
 
         const notificationId = params.id;
 
-        // ✅ CORRECTION: $1, $2 pour PostgreSQL + NOW()
         await query(
             `UPDATE notification_destinataires
              SET lu = true, date_lecture = NOW()

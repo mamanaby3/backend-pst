@@ -1,99 +1,12 @@
-/**
- * @swagger
- * tags:
- *   name: Dashboard
- *   description: Statistiques et KPIs pour l'administration
- */
+
 
 /**
  * @swagger
  * /api/dashboard:
  *   get:
  *     summary: Récupérer les statistiques du tableau de bord
- *     tags: [Dashboard]
- *     responses:
- *       200:
- *         description: Données du dashboard
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 users:
- *                   type: array
- *                   description: Nombre d'utilisateurs par rôle
- *                   items:
- *                     type: object
- *                     properties:
- *                       role:
- *                         type: string
- *                       total:
- *                         type: integer
- *                 parents:
- *                   type: integer
- *                   description: Nombre de parents
- *                 children:
- *                   type: integer
- *                   description: Nombre d'enfants
- *                 drivers:
- *                   type: integer
- *                   description: Nombre de chauffeurs
- *                 trips:
- *                   type: array
- *                   description: Statistiques des trajets par statut
- *                   items:
- *                     type: object
- *                     properties:
- *                       status:
- *                         type: string
- *                       total:
- *                         type: integer
- *                 revenue_monthly:
- *                   type: array
- *                   description: Revenus mensuels (paiements payés)
- *                   items:
- *                     type: object
- *                     properties:
- *                       month:
- *                         type: string
- *                         format: date
- *                       total:
- *                         type: number
- *                 subscriptions_active:
- *                   type: integer
- *                   description: Nombre d'abonnements actifs
- *                 avg_subscription:
- *                   type: number
- *                   description: Montant moyen par abonnement
- *                 growth:
- *                   type: object
- *                   description: Taux de croissance des revenus du mois courant vs le mois précédent
- *                   properties:
- *                     this_month:
- *                       type: number
- *                     last_month:
- *                       type: number
- *                     growth_rate:
- *                       type: number
- *                 incidents:
- *                   type: array
- *                   description: Alertes incidents récentes
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                       user_id:
- *                         type: integer
- *                       type:
- *                         type: string
- *                       message:
- *                         type: string
- *                       read:
- *                         type: boolean
- *                       created_at:
- *                         type: string
- *                         format: date-time
+ *     tags: [ADMIN]
+
  */
 
 import { NextResponse } from "next/server";
@@ -266,7 +179,7 @@ export async function GET() {
             WHERE status = 'pending';
         `);
         //   Alertes incidents
-        const incidentAlerts = await query(`SELECT * FROM notifications WHERE type='incident' ORDER BY created_at DESC LIMIT 10`);
+        const incidentAlerts = await query(`SELECT * FROM incidents   ORDER BY created_at DESC LIMIT 10`);
 
         //liste des paiements
         const result = await query(`

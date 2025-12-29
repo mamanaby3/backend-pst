@@ -4,46 +4,7 @@
  *   post:
  *     summary: Inscription d'un parent
  *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 example: Jane Doe
- *               email:
- *                 type: string
- *                 example: jane@example.com
- *               phone:
- *                 type: string
- *                 example: "+221770000000"
- *               password:
- *                 type: string
- *                 example: "secret123"
- *     responses:
- *       200:
- *         description: Parent créé avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 id:
- *                   type: integer
- *                 name:
- *                   type: string
- *                 email:
- *                   type: string
- *                 phone:
- *                   type: string
- *                 role:
- *                   type: string
- *                   example: parent
- *       500:
- *         description: Erreur serveur
+
  */
 
 import { NextResponse } from "next/server";
