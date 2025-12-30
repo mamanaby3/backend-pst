@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
  * @swagger
  * /api/drivers/trips:
  *   get:
- *     summary: Récupérer LA Liste des trajets du chauffeur
+ *     summary: Récupérer LA Liste des trajets du chauffeur CONNECTE
  *     tags: [CHAUFFEUR]
 
  *   post:

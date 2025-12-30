@@ -126,13 +126,21 @@ ALTER TABLE trips
     ADD CONSTRAINT unique_trip_driver_time
         UNIQUE (start_point, end_point, departure_time, driver_id);
 
+ALTER TABLE trips DROP CONSTRAINT trips_status_check;
+
+ALTER TABLE trips
+    ADD CONSTRAINT trips_status_check
+        CHECK (status IN ('pending', 'in_progress', 'completed', 'canceled'));
+
 
 CREATE TABLE trip_children (
                                trip_id INTEGER REFERENCES trips(id) ON DELETE CASCADE,
                                child_id INTEGER REFERENCES children(id) ON DELETE CASCADE,
                                PRIMARY KEY (trip_id, child_id)
 );
-
+ALTER TABLE trip_children
+    ADD COLUMN
+    created_at TIMESTAMP DEFAULT now();
 CREATE TABLE payments (
                           id SERIAL PRIMARY KEY,
                           user_id INTEGER REFERENCES users(id),
