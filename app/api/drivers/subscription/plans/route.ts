@@ -1,0 +1,381 @@
+// ========================================
+// FILE: app/api/drivers/subscription/plans/route.ts
+// ========================================
+
+/**
+ * @swagger
+ * /api/drivers/subscription/plans:
+ *   get:
+ *     summary: Liste des plans d'abonnement disponibles
+ *     tags: [CHAUFFEUR - Abonnement]
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { getUserFromRequest } from "@/lib/auth";
+
+export async function GET(request: NextRequest) {
+    try {
+        const user = await getUserFromRequest(request);
+
+        if (!user || user.role !== "driver") {
+            return NextResponse.json(
+                { success: false, message: "Non autorisé" },
+                { status: 403 }
+            );
+        }
+
+        const plans = await query(
+            `
+            SELECT 
+                id,
+                name,
+                description,
+                price,
+                duration_days,
+                features,
+                ROUND(price / duration_days, 2) as price_per_day
+            FROM subscription_plans
+            WHERE role = 'driver' AND active = true
+            ORDER BY price ASC
+            `
+        );
+
+        return NextResponse.json({
+            success: true,
+            data: plans.rows
+        });
+
+    } catch (error: any) {
+        console.error("Erreur GET plans:", error);
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// ========================================
+// FILE: app/api/drivers/payment-methods/route.ts
+// ========================================
+
+/**
+ * @swagger
+ * /api/drivers/payment-methods:
+ *   get:
+ *     summary: Liste des méthodes de paiement sauvegardées
+ *     tags: [CHAUFFEUR - Paiement]
+ */
+
+export async function GET_PAYMENT_METHODS(request: NextRequest) {
+    try {
+        const user = await getUserFromRequest(request);
+
+        if (!user || user.role !== "driver") {
+            return NextResponse.json(
+                { success: false, message: "Non autorisé" },
+                { status: 403 }
+            );
+        }
+
+        const methods = await query(
+            `
+            SELECT 
+                id,
+                method_type,
+                card_holder_name,
+                card_last4,
+                card_brand,
+                card_exp_month,
+                card_exp_year,
+                mobile_number,
+                mobile_provider,
+                nickname,
+                is_default,
+                is_verified,
+                created_at,
+                last_used_at
+            FROM saved_payment_methods
+            WHERE user_id = $1
+            ORDER BY is_default DESC, created_at DESC
+            `,
+            [user.id]
+        );
+
+        return NextResponse.json({
+            success: true,
+            data: methods.rows
+        });
+
+    } catch (error: any) {
+        console.error("Erreur GET payment methods:", error);
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * @swagger
+ * /api/drivers/payment-methods:
+ *   post:
+ *     summary: Ajouter une nouvelle méthode de paiement
+ *     tags: [CHAUFFEUR - Paiement]
+ */
+
+export async function POST_PAYMENT_METHOD(request: NextRequest) {
+    try {
+        const user = await getUserFromRequest(request);
+
+        if (!user || user.role !== "driver") {
+            return NextResponse.json(
+                { success: false, message: "Non autorisé" },
+                { status: 403 }
+            );
+        }
+
+        const body = await request.json();
+        const {
+            method_type,
+            card_holder_name,
+            card_number,
+            card_cvv,
+            card_exp_month,
+            card_exp_year,
+            mobile_number,
+            mobile_provider,
+            is_default = false,
+            nickname
+        } = body;
+
+        // Validation
+        if (!method_type || !['card', 'mobile_money'].includes(method_type)) {
+            return NextResponse.json(
+                { success: false, message: "Type de méthode invalide" },
+                { status: 400 }
+            );
+        }
+
+        let methodData: any = {
+            user_id: user.id,
+            method_type,
+            is_default
+        };
+
+        if (method_type === 'card') {
+            if (!card_holder_name || !card_number || !card_cvv || !card_exp_month || !card_exp_year) {
+                return NextResponse.json(
+                    { success: false, message: "Informations de carte incomplètes" },
+                    { status: 400 }
+                );
+            }
+
+            const card_last4 = card_number.replace(/\s/g, '').slice(-4);
+            const card_brand = detectCardBrand(card_number);
+            const card_token = `tok_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            methodData = {
+                ...methodData,
+                card_holder_name,
+                card_last4,
+                card_brand,
+                card_exp_month,
+                card_exp_year,
+                card_token,
+                nickname: nickname || `${card_brand} ****${card_last4}`
+            };
+
+        } else if (method_type === 'mobile_money') {
+            if (!mobile_number || !mobile_provider) {
+                return NextResponse.json(
+                    { success: false, message: "Informations mobile money incomplètes" },
+                    { status: 400 }
+                );
+            }
+
+            methodData = {
+                ...methodData,
+                mobile_number,
+                mobile_provider,
+                nickname: nickname || `${mobile_provider} ${mobile_number}`
+            };
+        }
+
+        const result = await query(
+            `
+            INSERT INTO saved_payment_methods (
+                user_id, method_type, card_holder_name, card_last4,
+                card_brand, card_exp_month, card_exp_year, card_token,
+                mobile_number, mobile_provider, nickname, is_default
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            RETURNING *
+            `,
+            [
+                methodData.user_id,
+                methodData.method_type,
+                methodData.card_holder_name || null,
+                methodData.card_last4 || null,
+                methodData.card_brand || null,
+                methodData.card_exp_month || null,
+                methodData.card_exp_year || null,
+                methodData.card_token || null,
+                methodData.mobile_number || null,
+                methodData.mobile_provider || null,
+                methodData.nickname,
+                methodData.is_default
+            ]
+        );
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: "Méthode de paiement ajoutée avec succès",
+                data: result.rows[0]
+            },
+            { status: 201 }
+        );
+
+    } catch (error: any) {
+        console.error("Erreur POST payment method:", error);
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// ========================================
+// FILE: app/api/drivers/payment-methods/[id]/route.ts
+// ========================================
+
+/**
+ * @swagger
+ * /api/drivers/payment-methods/{id}:
+ *   delete:
+ *     summary: Supprimer une méthode de paiement
+ *     tags: [CHAUFFEUR - Paiement]
+ */
+
+export async function DELETE_PAYMENT_METHOD(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const user = await getUserFromRequest(request);
+
+        if (!user || user.role !== "driver") {
+            return NextResponse.json(
+                { success: false, message: "Non autorisé" },
+                { status: 403 }
+            );
+        }
+
+        const { id } = await params;
+
+        const result = await query(
+            `
+            DELETE FROM saved_payment_methods
+            WHERE id = $1 AND user_id = $2
+            RETURNING *
+            `,
+            [id, user.id]
+        );
+
+        if (result.rowCount === 0) {
+            return NextResponse.json(
+                { success: false, message: "Méthode de paiement introuvable" },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: "Méthode de paiement supprimée avec succès"
+        });
+
+    } catch (error: any) {
+        console.error("Erreur DELETE payment method:", error);
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+/**
+ * @swagger
+ * /api/drivers/payment-methods/{id}/set-default:
+ *   put:
+ *     summary: Définir une méthode comme par défaut
+ *     tags: [CHAUFFEUR - Paiement]
+ */
+
+export async function PUT_SET_DEFAULT(
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const user = await getUserFromRequest(request);
+
+        if (!user || user.role !== "driver") {
+            return NextResponse.json(
+                { success: false, message: "Non autorisé" },
+                { status: 403 }
+            );
+        }
+
+        const { id } = await params;
+
+        // Vérifier que la méthode appartient à l'utilisateur
+        const checkResult = await query(
+            `SELECT id FROM saved_payment_methods WHERE id = $1 AND user_id = $2`,
+            [id, user.id]
+        );
+
+        if (checkResult.rowCount === 0) {
+            return NextResponse.json(
+                { success: false, message: "Méthode de paiement introuvable" },
+                { status: 404 }
+            );
+        }
+
+        // Le trigger se charge de désactiver les autres méthodes
+        await query(
+            `
+            UPDATE saved_payment_methods
+            SET is_default = true
+            WHERE id = $1 AND user_id = $2
+            `,
+            [id, user.id]
+        );
+
+        return NextResponse.json({
+            success: true,
+            message: "Méthode de paiement définie par défaut"
+        });
+
+    } catch (error: any) {
+        console.error("Erreur SET DEFAULT:", error);
+        return NextResponse.json(
+            { success: false, message: error.message },
+            { status: 500 }
+        );
+    }
+}
+
+// ========================================
+// FONCTIONS UTILITAIRES
+// ========================================
+
+function detectCardBrand(cardNumber: string): string {
+    const cleaned = cardNumber.replace(/\s/g, '');
+
+    if (/^4/.test(cleaned)) return 'Visa';
+    if (/^5[1-5]/.test(cleaned)) return 'Mastercard';
+    if (/^3[47]/.test(cleaned)) return 'American Express';
+    if (/^6(?:011|5)/.test(cleaned)) return 'Discover';
+
+    return 'Unknown';
+}

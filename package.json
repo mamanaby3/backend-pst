@@ -41,6 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.6",
     "exceljs": "^4.4.0",
+    "formdata-node": "^6.0.3",
     "formidable": "^3.5.4",
     "next-auth": "^4.24.13",
     "nodemailer": "^7.0.11",

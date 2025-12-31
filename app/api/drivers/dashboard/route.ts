@@ -296,7 +296,6 @@ export async function GET(request: NextRequest) {
             {
                 success: false,
                 error: 'Erreur serveur lors de la récupération du dashboard',
-                details: process.env.NODE_ENV === 'development' ? error.message : undefined
             },
             { status: 500 }
         );

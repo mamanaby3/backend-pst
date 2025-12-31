@@ -55,21 +55,27 @@ export async function GET() {
             ORDER BY date_trunc('month', created_at); 
         `);  // Revenus mensuels  somme des paiements PAYÉS par mois
 
-        const repartitionPayment = await query(`  
-         SELECT
-        CASE
-        WHEN method = 'Carte Bancaire' THEN 'Carte Bancaire'
-        WHEN method IN ('Wave', 'Orange Money', 'Yas Money', 'Kay Pay') THEN 'Mobile Money'
-        WHEN method = 'cash' THEN 'Espèces'
-        ELSE 'Autre'
-        END AS payment_type,
-        COUNT(*) AS total_transactions,
-            COALESCE(SUM(amount), 0) AS total_amount
-        FROM payments
-        WHERE status = 'paid'
-        AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
-        GROUP BY payment_type
-        ORDER BY total_amount DESC `
+        const repartitionPayment = await query(`
+            SELECT
+                payment_type,
+                COUNT(*) AS total_transactions,
+                COALESCE(SUM(amount), 0) AS total_amount
+            FROM (
+                     SELECT
+                         CASE
+                             WHEN method = 'Carte Bancaire' THEN 'Carte Bancaire'
+                             WHEN method IN ('Wave', 'Orange Money', 'Yas Money', 'Kay Pay') THEN 'Mobile Money'
+                             WHEN method = 'cash' THEN 'Espèces'
+                             ELSE 'Autre'
+                             END AS payment_type,
+                         amount
+                     FROM payments
+                     WHERE status = 'paid'
+                       AND date_trunc('month', created_at) = date_trunc('month', CURRENT_DATE)
+                 ) t
+            GROUP BY payment_type
+            ORDER BY total_amount DESC;
+        `
     );
         const revenueMonthlyEnCours = await query(`
             SELECT
@@ -104,24 +110,7 @@ export async function GET() {
               AND DATE(created_at) = CURRENT_DATE
         `);
 
-        // Abonnements actifs
-        const activeSubscriptions = await query(`
-            SELECT COUNT(*)::int AS total
-            FROM subscriptions
-            WHERE active = true
-              AND start_date <= CURRENT_DATE
-              AND (end_date IS NULL OR end_date >= CURRENT_DATE)
-        `);
 
-        // Montant moyen par abonnement
-        const avgSubscription = await query(
-            `SELECT
-                 ROUND(AVG(price), 2) AS montant_moyen_abonnement
-             FROM subscriptions
-             WHERE active = true
-               AND start_date <= CURRENT_DATE
-               AND (end_date IS NULL OR end_date >= CURRENT_DATE);
-            `);
        // Nombre d'écoles partenaires
         const schoolsCount = await query(
             `SELECT COUNT(*) AS total FROM schools WHERE status = 'Actif'`
@@ -170,6 +159,26 @@ export async function GET() {
 
         `);
 
+
+        // Abonnements actifs
+        const activeSubscriptions = await query(`
+            SELECT COUNT(*)::int AS total
+            FROM subscriptions
+            WHERE active = true
+              AND start_date <= CURRENT_DATE
+              AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+        `);
+
+// Prix moyen abonnement
+        const avgSubscription = await query(`
+            SELECT
+                COALESCE(ROUND(AVG(sp.price), 2), 0) AS avg_price
+            FROM subscriptions s
+                     JOIN subscription_plans sp ON sp.id = s.plan_id
+            WHERE s.active = true
+              AND s.start_date <= CURRENT_DATE
+              AND (s.end_date IS NULL OR s.end_date >= CURRENT_DATE)
+        `);
           // Paiements en attente
         const pendingPayments = await query(`
             SELECT
