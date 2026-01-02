@@ -469,25 +469,4 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- 8. Exemple de données de test
-/*
--- Insérer une méthode de paiement carte
-INSERT INTO saved_payment_methods (
-    user_id, method_type, card_holder_name, card_last4,
-    card_brand, card_exp_month, card_exp_year, card_token,
-    is_default, nickname
-) VALUES (
-    1, 'card', 'Mamadou Diop', '1234',
-    'Visa', 12, 2025, 'tok_1234567890',
-    true, 'Ma carte Visa'
-);
 
--- Insérer une méthode mobile money
-INSERT INTO saved_payment_methods (
-    user_id, method_type, mobile_number, mobile_provider,
-    is_default, nickname
-) VALUES (
-    1, 'mobile_money', '+221771234567', 'Wave',
-    false, 'Mon compte Wave'
-);
-*/

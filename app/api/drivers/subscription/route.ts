@@ -11,7 +11,7 @@ import { getUserFromRequest } from "@/lib/auth";
  * /api/drivers/subscription:
  *   get:
  *     summary: Voir mon abonnement actif
- *     tags: [CHAUFFEUR - Abonnement]
+ *     tags: [CHAUFFEUR]
  */
 export async function GET(request: NextRequest) {
     try {
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
  * /api/drivers/subscription:
  *   post:
  *     summary: Souscrire à un abonnement avec paiement
- *     tags: [CHAUFFEUR - Abonnement]
+ *     tags: [CHAUFFEUR]
  */
 export async function POST(request: NextRequest) {
     try {
@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
 
             const payment_id = paymentResult.rows[0].id;
 
-            // 3. Créer l'abonnement
+            //  Créer l'abonnement
             const subscriptionResult = await query(
                 `
                 INSERT INTO subscriptions (
@@ -325,7 +325,7 @@ export async function POST(request: NextRequest) {
                 [user.id, plan_id, plan.name, plan.price, plan.duration_days, auto_renew, payment_id]
             );
 
-            // 4. Sauvegarder la méthode de paiement si demandé
+            //   Sauvegarder la méthode de paiement si demandé
             if ((payment_method === 'card' && save_card) || (payment_method === 'mobile_money' && save_mobile)) {
                 const savedMethodData: any = {
                     user_id: user.id,
@@ -384,7 +384,7 @@ export async function POST(request: NextRequest) {
 
             await query('COMMIT');
 
-            // 6. Envoyer une notification
+            //   Envoyer une notification
             const notifResult = await query(
                 `
                 INSERT INTO notifications (libelle, type, description, emetteur_id)
@@ -439,55 +439,6 @@ export async function POST(request: NextRequest) {
     }
 }
 
-/**
- * @swagger
- * /api/drivers/subscription:
- *   delete:
- *     summary: Annuler l'abonnement
- *     tags: [CHAUFFEUR - Abonnement]
- */
-export async function DELETE(request: NextRequest) {
-    try {
-        const user = await getUserFromRequest(request);
-
-        if (!user || user.role !== "driver") {
-            return NextResponse.json(
-                { success: false, message: "Non autorisé" },
-                { status: 403 }
-            );
-        }
-
-        const result = await query(
-            `
-            UPDATE subscriptions
-            SET active = false, canceled_at = now(), auto_renew = false
-            WHERE user_id = $1 AND active = true
-            RETURNING *
-            `,
-            [user.id]
-        );
-
-        if (result.rowCount === 0) {
-            return NextResponse.json(
-                { success: false, message: "Aucun abonnement actif trouvé" },
-                { status: 404 }
-            );
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: "Abonnement annulé avec succès. Il restera actif jusqu'à la date d'expiration.",
-            data: result.rows[0]
-        });
-
-    } catch (error: any) {
-        console.error("Erreur DELETE subscription:", error);
-        return NextResponse.json(
-            { success: false, message: error.message },
-            { status: 500 }
-        );
-    }
-}
 
 // ========================================
 // FONCTIONS UTILITAIRES
