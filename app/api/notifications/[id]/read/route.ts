@@ -5,7 +5,7 @@ import {query} from "@/lib/db";
 type Params = {
     params: Promise<{ id: string }>;
 };
-export async function PUT_READ(
+export async function PUT(
     request: NextRequest,
     context: Params
 ) {

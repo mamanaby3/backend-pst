@@ -59,7 +59,7 @@ export async function GET(
 
 
 //   SUPPRIMER NOTIFICATION
-export async function DELETE_NOTIF(
+export async function DELETE(
     request: NextRequest,
     context: Params
 ) {

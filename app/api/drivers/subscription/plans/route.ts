@@ -4,7 +4,7 @@
  * /api/drivers/subscription/plans:
  *   get:
  *     summary: Liste des plans d'abonnement disponibles
- *     tags: [CHAUFFEUR - Abonnement]
+ *     tags: [CHAUFFEUR]
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -61,54 +61,54 @@ export async function GET(request: NextRequest) {
  *     tags: [CHAUFFEUR]
  */
 
-export async function GET_PAYMENT_METHODS(request: NextRequest) {
-    try {
-        const user = await getUserFromRequest(request);
-
-        if (!user || user.role !== "driver") {
-            return NextResponse.json(
-                { success: false, message: "Non autorisé" },
-                { status: 403 }
-            );
-        }
-
-        const methods = await query(
-            `
-            SELECT 
-                id,
-                method_type,
-                card_holder_name,
-                card_last4,
-                card_brand,
-                card_exp_month,
-                card_exp_year,
-                mobile_number,
-                mobile_provider,
-                nickname,
-                is_default,
-                is_verified,
-                created_at,
-                last_used_at
-            FROM saved_payment_methods
-            WHERE user_id = $1
-            ORDER BY is_default DESC, created_at DESC
-            `,
-            [user.id]
-        );
-
-        return NextResponse.json({
-            success: true,
-            data: methods.rows
-        });
-
-    } catch (error: any) {
-        console.error("Erreur GET payment methods:", error);
-        return NextResponse.json(
-            { success: false, message: error.message },
-            { status: 500 }
-        );
-    }
-}
+// export async function GET_PAYMENT_METHODS(request: NextRequest) {
+//     try {
+//         const user = await getUserFromRequest(request);
+//
+//         if (!user || user.role !== "driver") {
+//             return NextResponse.json(
+//                 { success: false, message: "Non autorisé" },
+//                 { status: 403 }
+//             );
+//         }
+//
+//         const methods = await query(
+//             `
+//             SELECT
+//                 id,
+//                 method_type,
+//                 card_holder_name,
+//                 card_last4,
+//                 card_brand,
+//                 card_exp_month,
+//                 card_exp_year,
+//                 mobile_number,
+//                 mobile_provider,
+//                 nickname,
+//                 is_default,
+//                 is_verified,
+//                 created_at,
+//                 last_used_at
+//             FROM saved_payment_methods
+//             WHERE user_id = $1
+//             ORDER BY is_default DESC, created_at DESC
+//             `,
+//             [user.id]
+//         );
+//
+//         return NextResponse.json({
+//             success: true,
+//             data: methods.rows
+//         });
+//
+//     } catch (error: any) {
+//         console.error("Erreur GET payment methods:", error);
+//         return NextResponse.json(
+//             { success: false, message: error.message },
+//             { status: 500 }
+//         );
+//     }
+// }
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ export async function GET_PAYMENT_METHODS(request: NextRequest) {
  *     tags: [CHAUFFEUR]
  */
 
-export async function POST_PAYMENT_METHOD(request: NextRequest) {
+export async function POST (request: NextRequest) {
     try {
         const user = await getUserFromRequest(request);
 
