@@ -2,9 +2,12 @@ import {NextRequest, NextResponse} from "next/server";
 import {query} from "@/lib/db";
 import {getUserFromRequest} from "@/lib/auth";
 
+type Params = {
+    params: Promise<{ id: string }>;
+};
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: Params
 ) {
     try {
         const user = await getUserFromRequest(request);
@@ -13,7 +16,7 @@ export async function GET(
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
         }
 
-        const notificationId = params.id;
+        const notificationId = await context.params;
 
         // Récupérer la notification
         const notifResult = await query(
@@ -58,7 +61,7 @@ export async function GET(
 //   SUPPRIMER NOTIFICATION
 export async function DELETE_NOTIF(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: Params
 ) {
     try {
         const user = await getUserFromRequest(request);
@@ -67,7 +70,7 @@ export async function DELETE_NOTIF(
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
         }
 
-        const notificationId = params.id;
+        const notificationId = await context.params;
 
 
         await query(

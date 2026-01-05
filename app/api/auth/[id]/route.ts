@@ -1,24 +1,26 @@
-import {NextRequest, NextResponse} from "next/server";
-import {getUserById, updateUser} from "@/services/userServices";
-import {verifyToken} from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getUserById, updateUser } from "@/services/userServices";
+import { verifyToken } from "@/lib/auth";
 
-export async function PUT(
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) {
+type Params = {
+    params: Promise<{ id: string }>;
+};
+
+export async function PUT(req: NextRequest, context: Params) {
     try {
-        const { params } = context;
-        const { id } = await params; // <-- on "unwrap" le Promise
+        // Simplification : déstructuration directe
+        const { id } = await context.params;
+        const userId = Number(id);
 
-        if (!id || isNaN(Number(id))) {
+        // Validation de l'ID
+        if (isNaN(userId)) {
             return NextResponse.json(
                 { message: "ID utilisateur invalide" },
                 { status: 400 }
             );
         }
 
-        const userId = Number(id);
-
+        // Vérification du token
         const auth = req.headers.get("authorization");
         if (!auth) {
             return NextResponse.json({ message: "No token" }, { status: 401 });
@@ -26,9 +28,11 @@ export async function PUT(
 
         verifyToken(auth.split(" ")[1]);
 
+        // Récupération des données
         const body = await req.json();
         const { name, email, phone } = body;
 
+        // Vérification de l'existence de l'utilisateur
         const user = await getUserById(userId);
         if (!user) {
             return NextResponse.json(
@@ -37,8 +41,10 @@ export async function PUT(
             );
         }
 
+        // Mise à jour
         const updatedUser = await updateUser(userId, { name, email, phone });
 
+        // Séparation du nom
         const [firstName, ...rest] = (updatedUser.name ?? '').split(' ');
 
         return NextResponse.json({

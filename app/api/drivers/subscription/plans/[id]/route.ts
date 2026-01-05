@@ -1,7 +1,10 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getUserFromRequest } from "@/lib/auth";
+import { query } from "@/lib/db";
 
-import {NextRequest, NextResponse} from "next/server";
-import {getUserFromRequest} from "@/lib/auth";
-import {query} from "@/lib/db";
+type Params = {
+    params: Promise<{ id: string }>;
+};
 
 /**
  * @swagger
@@ -10,11 +13,7 @@ import {query} from "@/lib/db";
  *     summary: Supprimer une méthode de paiement
  *     tags: [CHAUFFEUR]
  */
-
-export async function DELETE(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: NextRequest, context: Params) {
     try {
         const user = await getUserFromRequest(request);
 
@@ -25,14 +24,12 @@ export async function DELETE(
             );
         }
 
-        const { id } = await params;
+        const { id } = await context.params;
 
         const result = await query(
-            `
-            DELETE FROM saved_payment_methods
-            WHERE id = $1 AND user_id = $2
-            RETURNING *
-            `,
+            `DELETE FROM saved_payment_methods
+             WHERE id = $1 AND user_id = $2
+                 RETURNING *`,
             [id, user.id]
         );
 
@@ -62,13 +59,9 @@ export async function DELETE(
  * /api/drivers/subscription/plans/{id}:
  *   put:
  *     summary: Définir une méthode comme par défaut
- *     tags: [CHAUFFEUR ]
+ *     tags: [CHAUFFEUR]
  */
-
-export async function PUT_SET_DEFAULT(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, context: Params) {
     try {
         const user = await getUserFromRequest(request);
 
@@ -79,11 +72,12 @@ export async function PUT_SET_DEFAULT(
             );
         }
 
-        const { id } = await params;
+        const { id } = await context.params;
 
         // Vérifier que la méthode appartient à l'utilisateur
         const checkResult = await query(
-            `SELECT id FROM saved_payment_methods WHERE id = $1 AND user_id = $2`,
+            `SELECT id FROM saved_payment_methods
+             WHERE id = $1 AND user_id = $2`,
             [id, user.id]
         );
 
@@ -96,11 +90,9 @@ export async function PUT_SET_DEFAULT(
 
         // Le trigger se charge de désactiver les autres méthodes
         await query(
-            `
-            UPDATE saved_payment_methods
-            SET is_default = true
-            WHERE id = $1 AND user_id = $2
-            `,
+            `UPDATE saved_payment_methods
+             SET is_default = true
+             WHERE id = $1 AND user_id = $2`,
             [id, user.id]
         );
 
