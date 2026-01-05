@@ -20,18 +20,18 @@ import { NextResponse } from "next/server";
 import {getDriverById, updateDriver, deleteDriver, updateDriverStatus} from "@/services/driverServices";
 import {authMiddleware} from "@/lib/auth";
 
-export async function GET(req: Request, params: { id: string }) {
+export async function GET(req: Request, { params }: { params: { id: string } }) {
     const driver = await getDriverById(Number(params.id));
     return NextResponse.json(driver);
 }
 
-export async function PUT(req: Request, params: { id: string }) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
     const body = await req.json();
     const updated = await updateDriver(Number(params.id), body);
     return NextResponse.json(updated);
 }
 
-export async function DELETE(req: Request, params: { id: string }) {
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
     await deleteDriver(Number(params.id));
     return NextResponse.json({ success: true });
 }
