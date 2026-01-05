@@ -1,21 +1,27 @@
-
 import { query } from '@/lib/db';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+type Params = {
+    params: Promise<{
+        id: string;
+    }>;
+};
 
 // GET: Récupérer un incident par ID
 export async function GET(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: Params
 ) {
     try {
-        const id = parseInt(params.id, 10);
+        const { id } = await context.params;
+        const numericId = parseInt(id, 10);
 
-        if (isNaN(id)) {
+        if (isNaN(numericId)) {
             return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
         }
 
         const sql = 'SELECT * FROM incidents WHERE id = $1';
-        const result = await query(sql, [id]);
+        const result = await query(sql, [numericId]);
 
         if (result.rows.length === 0) {
             return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
@@ -30,25 +36,27 @@ export async function GET(
 
 // PUT: Mettre à jour un incident
 export async function PUT(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: Params
 ) {
     try {
-        const id = parseInt(params.id, 10);
+        const { id } = await context.params;
+        const numericId = parseInt(id, 10);
 
-        if (isNaN(id)) {
+        if (isNaN(numericId)) {
             return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
         }
 
         const formData = await req.formData();
         const type_de_problem = formData.get('type_de_problem') as string;
         const description = formData.get('description') as string;
-        const user_id = parseInt(formData.get('user_id') as string, 10);
+        const userIdStr = formData.get('user_id') as string;
+        const user_id = parseInt(userIdStr, 10);
 
         // Validation
-        if (!type_de_problem || !description || !user_id) {
+        if (!type_de_problem || !description || isNaN(user_id)) {
             return NextResponse.json({
-                error: 'Missing required fields'
+                error: 'Missing or invalid required fields'
             }, { status: 400 });
         }
 
@@ -85,7 +93,7 @@ export async function PUT(
             description,
             documents.length > 0 ? JSON.stringify(documents) : null,
             user_id,
-            id
+            numericId
         ]);
 
         if (result.rows.length === 0) {
@@ -101,13 +109,14 @@ export async function PUT(
 
 // DELETE: Supprimer un incident
 export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: Params
 ) {
     try {
-        const id = parseInt(params.id, 10);
+        const { id } = await context.params;
+        const numericId = parseInt(id, 10);
 
-        if (isNaN(id)) {
+        if (isNaN(numericId)) {
             return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
         }
 
@@ -122,7 +131,7 @@ export async function DELETE(
         }
 
         const sql = 'DELETE FROM incidents WHERE id = $1 RETURNING *';
-        const result = await query(sql, [id]);
+        const result = await query(sql, [numericId]);
 
         if (result.rows.length === 0) {
             return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
@@ -140,13 +149,14 @@ export async function DELETE(
 
 // PATCH: Mettre à jour le statut uniquement
 export async function PATCH(
-    req: Request,
-    { params }: { params: { id: string } }
+    req: NextRequest,
+    context: Params
 ) {
     try {
-        const id = parseInt(params.id, 10);
+        const { id } = await context.params;
+        const numericId = parseInt(id, 10);
 
-        if (isNaN(id)) {
+        if (isNaN(numericId)) {
             return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
         }
 
@@ -166,7 +176,7 @@ export async function PATCH(
                 RETURNING *
         `;
 
-        const result = await query(sql, [status, id]);
+        const result = await query(sql, [status, numericId]);
 
         if (result.rows.length === 0) {
             return NextResponse.json({ error: 'Incident not found' }, { status: 404 });
