@@ -4,9 +4,9 @@ import {query} from "@/lib/db";
 
 /**
  * @swagger
- * /api/drivers/subscription:
- *   delete:
- *     summary: Annuler l'abonnement
+ * /api/drivers/subscription/{id}:
+ *   post:
+ *     summary: Résilier l'abonnement
  *     tags: [CHAUFFEUR]
  */
 export async function DELETE(request: NextRequest) {
@@ -20,31 +20,114 @@ export async function DELETE(request: NextRequest) {
             );
         }
 
-        const result = await query(
+        const body = await request.json();
+        const { subscription_id, reason, cancel_immediately = false } = body;
+
+        if (!subscription_id) {
+            return NextResponse.json(
+                { success: false, message: "ID d'abonnement requis" },
+                { status: 400 }
+            );
+        }
+
+        // Récupérer l'abonnement
+        const subResult = await query(
             `
-            UPDATE subscriptions
-            SET active = false, canceled_at = now(), auto_renew = false
-            WHERE user_id = $1 AND active = true
-            RETURNING *
+            SELECT s.*, sp.name as plan_name
+            FROM subscriptions s
+            LEFT JOIN subscription_plans sp ON s.plan_id = sp.id
+            WHERE s.id = $1 AND s.user_id = $2 AND s.active = true
             `,
-            [user.id]
+            [subscription_id, user.id]
         );
 
-        if (result.rowCount === 0) {
+        if (subResult.rowCount === 0) {
             return NextResponse.json(
-                { success: false, message: "Aucun abonnement actif trouvé" },
+                { success: false, message: "Abonnement actif introuvable" },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            message: "Abonnement annulé avec succès. Il restera actif jusqu'à la date d'expiration.",
-            data: result.rows[0]
-        });
+        const subscription = subResult.rows[0];
+
+        await query('BEGIN');
+
+        try {
+            if (cancel_immediately) {
+                // Résiliation immédiate
+                await query(
+                    `
+                    UPDATE subscriptions
+                    SET 
+                        active = false,
+                        auto_renew = false,
+                        canceled_at = now(),
+                        cancellation_reason = $1,
+                        updated_at = now()
+                    WHERE id = $2
+                    `,
+                    [reason || 'Résiliation à la demande de l\'utilisateur', subscription_id]
+                );
+            } else {
+                // Résiliation à la fin de la période
+                await query(
+                    `
+                    UPDATE subscriptions
+                    SET 
+                        auto_renew = false,
+                        canceled_at = now(),
+                        cancellation_reason = $1,
+                        updated_at = now()
+                    WHERE id = $2
+                    `,
+                    [reason || 'Résiliation programmée', subscription_id]
+                );
+            }
+
+            await query('COMMIT');
+
+            // Notification
+            const notifResult = await query(
+                `
+                INSERT INTO notifications (libelle, type, description, emetteur_id)
+                VALUES ($1, $2, $3, $4)
+                RETURNING id
+                `,
+                [
+                    'Abonnement résilié',
+                    'subscription_canceled',
+                    cancel_immediately
+                        ? `Votre abonnement ${subscription.plan_name} a été résilié immédiatement`
+                        : `Votre abonnement ${subscription.plan_name} sera résilié à la fin de la période en cours`,
+                    user.id
+                ]
+            );
+
+            await query(
+                `INSERT INTO notification_destinataires (notification_id, destinataire_id)
+                 VALUES ($1, $2)`,
+                [notifResult.rows[0].id, user.id]
+            );
+
+            return NextResponse.json({
+                success: true,
+                message: cancel_immediately
+                    ? "Abonnement résilié immédiatement"
+                    : "Abonnement programmé pour résiliation à la fin de la période",
+                data: {
+                    subscription_id,
+                    canceled_at: new Date(),
+                    active_until: cancel_immediately ? new Date() : subscription.end_date
+                }
+            });
+
+        } catch (error) {
+            await query('ROLLBACK');
+            throw error;
+        }
 
     } catch (error: any) {
-        console.error("Erreur DELETE subscription:", error);
+        console.error("Erreur résiliation abonnement:", error);
         return NextResponse.json(
             { success: false, message: error.message },
             { status: 500 }
