@@ -2,9 +2,12 @@ import {getUserFromRequest} from "@/lib/auth";
 import {NextRequest, NextResponse} from "next/server";
 import {query} from "@/lib/db";
 
+type Params = {
+    params: Promise<{ id: string }>;
+};
 export async function PUT_READ(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    context: Params
 ) {
     try {
         const user = await getUserFromRequest(request);
@@ -13,7 +16,7 @@ export async function PUT_READ(
             return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
         }
 
-        const notificationId = params.id;
+        const notificationId = await context.params;
 
         await query(
             `UPDATE notification_destinataires
