@@ -22,72 +22,36 @@ import {
 } from "@/services/driverServices";
 import { authMiddleware } from "@/lib/auth";
 
-/**
- * GET /api/drivers/{id}
- */
-export async function GET(
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) {
-    try {
-        authMiddleware(req);
+type Params = {
+    params: Promise<{
+        id: string;
+    }>;
+};
 
-        const { id } = await context.params;
+export async function GET(req: NextRequest, context: Params) {
+    authMiddleware(req);
 
-        const driver = await getDriverById(Number(id));
-        return NextResponse.json(driver);
-    } catch (error) {
-        console.error("Erreur GET driver:", error);
-        return NextResponse.json(
-            { error: "Erreur serveur" },
-            { status: 500 }
-        );
-    }
+    const { id } = await context.params;
+    const driver = await getDriverById(Number(id));
+
+    return NextResponse.json(driver);
 }
 
-/**
- * PUT /api/drivers/{id}
- */
-export async function PUT(
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) {
-    try {
-        authMiddleware(req);
+export async function PUT(req: NextRequest, context: Params) {
+    authMiddleware(req);
 
-        const { id } = await context.params;
-        const body = await req.json();
+    const { id } = await context.params;
+    const body = await req.json();
 
-        const updated = await updateDriver(Number(id), body);
-        return NextResponse.json(updated);
-    } catch (error) {
-        console.error("Erreur PUT driver:", error);
-        return NextResponse.json(
-            { error: "Erreur serveur" },
-            { status: 500 }
-        );
-    }
+    const updated = await updateDriver(Number(id), body);
+    return NextResponse.json(updated);
 }
 
-/**
- * DELETE /api/drivers/{id}
- */
-export async function DELETE(
-    req: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) {
-    try {
-        authMiddleware(req);
+export async function DELETE(req: NextRequest, context: Params) {
+    authMiddleware(req);
 
-        const { id } = await context.params;
+    const { id } = await context.params;
+    await deleteDriver(Number(id));
 
-        await deleteDriver(Number(id));
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("Erreur DELETE driver:", error);
-        return NextResponse.json(
-            { error: "Erreur serveur" },
-            { status: 500 }
-        );
-    }
+    return NextResponse.json({ success: true });
 }
