@@ -402,6 +402,16 @@ CREATE TABLE IF NOT EXISTS saved_payment_methods (
 CREATE INDEX IF NOT EXISTS idx_saved_payment_methods_user ON saved_payment_methods(user_id);
 CREATE INDEX IF NOT EXISTS idx_saved_payment_methods_default ON saved_payment_methods(user_id, is_default) WHERE is_default = true;
 
+-- 1. Ajouter la colonne metadata (JSONB pour stocker des données flexibles)
+ALTER TABLE payments
+    ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}'::jsonb;
+
+-- 2. Ajouter un commentaire pour documenter
+COMMENT ON COLUMN payments.metadata IS 'Données supplémentaires : token PayTech, infos transaction, custom_field, etc.';
+
+-- 3. Créer un index GIN pour recherche rapide dans le JSONB
+CREATE INDEX IF NOT EXISTS idx_payments_metadata ON payments USING GIN (metadata);
+
 -- 5. Fonction pour gérer une seule méthode par défaut
 CREATE OR REPLACE FUNCTION ensure_single_default_payment_method()
     RETURNS TRIGGER AS $$

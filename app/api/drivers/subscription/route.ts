@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
 
         // Vérifie la présence de l'URL de redirection ou du token
         if (!paytechData.redirect_url && !paytechData.token) {
-            console.error("  Pas d'URL de paiement reçue de PayTech");
+            console.error("❌ Pas d'URL de paiement reçue de PayTech");
             return NextResponse.json({
                 success: false,
                 message: "Aucune URL de paiement reçue"
@@ -169,13 +169,19 @@ export async function POST(request: NextRequest) {
         const paymentUrl = paytechData.redirect_url ||
             `https://paytech.sn/payment/checkout/${paytechData.token}`;
 
-        // Sauvegarde le token PayTech dans les métadonnées
+        // ✅ CORRECTION ICI : Sauvegarde le token PayTech avec cast explicite
         if (paytechData.token) {
+            const metadata = {
+                paytech_token: paytechData.token,
+                payment_url: paymentUrl,
+                created_at: new Date().toISOString()
+            };
+
             await query(
                 `UPDATE payments
-                 SET metadata = jsonb_build_object('paytech_token', $1)
+                 SET metadata = $1::jsonb
                  WHERE id = $2`,
-                [paytechData.token, paymentId]
+                [JSON.stringify(metadata), paymentId]
             );
         }
 
