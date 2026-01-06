@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
         // Vérification des clés PayTech
         if (!process.env.PAYTECH_API_KEY || !process.env.PAYTECH_API_SECRET) {
-            console.error("❌ Clés PayTech manquantes dans les variables d'environnement");
+            console.error("❌ Clés PayTech manquantes");
             return NextResponse.json({
                 success: false,
                 message: "Configuration PayTech manquante"
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         }
         const plan = planRes.rows[0];
 
-        // Génère un ID de transaction unique (sans espaces ni tirets)
+        // Génère un ID de transaction unique
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8).toUpperCase();
         const transactionId = `PTC${timestamp}${random}`;
@@ -71,20 +71,21 @@ export async function POST(request: NextRequest) {
         );
         const paymentId = paymentInsert.rows[0].id;
 
-        // Insère l'abonnement (inactif en attendant la confirmation)
+        // Insère l'abonnement (inactif en attendant confirmation)
+        // Utilise INTERVAL arithmétique pour compatibilité maximale
         await query(
             `INSERT INTO subscriptions (
                 user_id, plan_id, type, price, start_date,
                 end_date, active, payment_id
             ) VALUES (
                          $1, $2, $3, $4, CURRENT_DATE,
-                         CURRENT_DATE + ($5 || ' days')::INTERVAL,
+                         CURRENT_DATE + INTERVAL '1 day' * $5,
                          false, $6
                      )`,
             [user.id, plan_id, plan.name, plan.price, plan.duration_days, paymentId]
         );
 
-        // Détermine l'URL de base (Vercel ou localhost)
+        // Détermine l'URL de base
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
                 'http://localhost:3000');
@@ -92,17 +93,17 @@ export async function POST(request: NextRequest) {
         // Prépare le payload pour PayTech
         const paytechPayload = {
             item_name: `Abonnement ${plan.name}`.substring(0, 50),
-            item_price: Math.round(Number(plan.price)), // DOIT être un entier
+            item_price: Math.round(Number(plan.price)),
             currency: "XOF",
-            ref_command: transactionId, // Sans espaces ni caractères spéciaux
+            ref_command: transactionId,
             command_name: `Sub ${plan.name} - User ${user.id}`.substring(0, 50),
-            env: process.env.PAYTECH_ENV || "test", // "test" ou "prod"
+            env: process.env.PAYTECH_ENV || "test",
             ipn_url: `${baseUrl}/api/payments/webhook/paytech`,
             success_url: `${baseUrl}/payment-success?ref=${transactionId}`,
             cancel_url: `${baseUrl}/payment-cancel?ref=${transactionId}`,
         };
 
-        // Ajoute des informations personnalisées si mobile money
+        // Ajoute custom_field si mobile money
         if (mobile_number && mobile_provider) {
             Object.assign(paytechPayload, {
                 custom_field: JSON.stringify({
@@ -114,10 +115,7 @@ export async function POST(request: NextRequest) {
         }
 
         console.log("=== PAYTECH REQUEST ===");
-        console.log("URL:", "https://paytech.sn/api/payment/request-payment");
         console.log("Payload:", JSON.stringify(paytechPayload, null, 2));
-        console.log("API_KEY:", process.env.PAYTECH_API_KEY ? "✓ Configurée" : "✗ MANQUANTE");
-        console.log("API_SECRET:", process.env.PAYTECH_API_SECRET ? "✓ Configurée" : "✗ MANQUANTE");
 
         // Appel à l'API PayTech
         const paytechResponse = await axios.post(
@@ -129,21 +127,19 @@ export async function POST(request: NextRequest) {
                     "API_KEY": process.env.PAYTECH_API_KEY,
                     "API_SECRET": process.env.PAYTECH_API_SECRET
                 },
-                timeout: 30000 // 30 secondes
+                timeout: 30000
             }
         );
 
         console.log("=== PAYTECH RESPONSE ===");
         console.log("Status:", paytechResponse.status);
-        console.log("Data:", JSON.stringify(paytechResponse.data, null, 2));
 
         const paytechData = paytechResponse.data;
 
         // Vérifie si PayTech a retourné une erreur
         if (paytechData.success === 0 || paytechData.success === false) {
-            console.error("❌ PayTech a refusé la requête:", paytechData);
+            console.error("❌ PayTech refus:", paytechData.message);
 
-            // Met à jour le paiement en "failed"
             await query(
                 `UPDATE payments SET status = 'failed' WHERE id = $1`,
                 [paymentId]
@@ -156,9 +152,9 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        // Vérifie la présence de l'URL de redirection ou du token
+        // Vérifie la présence de l'URL ou du token
         if (!paytechData.redirect_url && !paytechData.token) {
-            console.error("❌ Pas d'URL de paiement reçue de PayTech");
+            console.error("❌ Pas d'URL de paiement reçue");
             return NextResponse.json({
                 success: false,
                 message: "Aucune URL de paiement reçue"
@@ -169,24 +165,21 @@ export async function POST(request: NextRequest) {
         const paymentUrl = paytechData.redirect_url ||
             `https://paytech.sn/payment/checkout/${paytechData.token}`;
 
-        // ✅ CORRECTION ICI : Sauvegarde le token PayTech avec cast explicite
+        // Sauvegarde le metadata (méthode la plus compatible)
         if (paytechData.token) {
-            const metadata = {
+            const metadataJson = JSON.stringify({
                 paytech_token: paytechData.token,
                 payment_url: paymentUrl,
                 created_at: new Date().toISOString()
-            };
+            });
 
             await query(
-                `UPDATE payments
-                 SET metadata = $1::jsonb
-                 WHERE id = $2`,
-                [JSON.stringify(metadata), paymentId]
+                `UPDATE payments SET metadata = $1::jsonb WHERE id = $2`,
+                [metadataJson, paymentId]
             );
         }
 
-        console.log("✅ Paiement initié avec succès");
-        console.log("URL de paiement:", paymentUrl);
+        console.log("✅ Paiement initié:", transactionId);
 
         return NextResponse.json({
             success: true,
@@ -196,29 +189,18 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (err: any) {
-        console.error("=== ERREUR POST SUBSCRIPTION ===");
+        console.error("=== ERREUR ===");
         console.error("Message:", err.message);
 
         if (err.response) {
-            console.error("Status:", err.response.status);
-            console.error("Data:", JSON.stringify(err.response.data, null, 2));
-        }
-
-        if (err.code === 'ECONNABORTED') {
-            return NextResponse.json({
-                success: false,
-                message: "Timeout lors de la connexion à PayTech"
-            }, { status: 504 });
+            console.error("PayTech Status:", err.response.status);
+            console.error("PayTech Error:", err.response.data);
         }
 
         return NextResponse.json({
             success: false,
             message: err.response?.data?.message || err.message || "Erreur serveur",
-            error: process.env.NODE_ENV === 'development' ? {
-                status: err.response?.status,
-                data: err.response?.data,
-                message: err.message
-            } : undefined
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
         }, { status: err.response?.status || 500 });
     }
 }
