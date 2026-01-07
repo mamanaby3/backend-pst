@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 
 /**
  * @swagger
- * /api/alertes/subscription-alerts:
+ * /api/drivers/subscription/alertes:
  *   get:
  *     summary: Envoyer des alertes d'expiration d'abonnements
  *     tags: [CRON]

@@ -1,6 +1,6 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { sendSms } from "@/lib/sms";
 
 export async function POST(request: NextRequest) {
     try {
@@ -10,66 +10,93 @@ export async function POST(request: NextRequest) {
         console.log(JSON.stringify(body, null, 2));
 
         const {
-            ref_command,      // Transaction ID
-            item_price,       // Montant
-            payment_method,   // Méthode de paiement
-            payment_status,   // "success" ou "cancelled"
-            type_event        // Type d'événement
+            ref_command,
+            payment_status,
+            type_event
         } = body;
 
-        // Vérifie si le paiement est réussi
+        //   Paiement confirmé
         if (payment_status === "success" && type_event === "sale_complete") {
 
-            // Met à jour le statut du paiement
-            const updateResult = await query(
-                `UPDATE payments
-                 SET status = 'completed', updated_at = NOW()
-                 WHERE transaction_id = $1
-                     RETURNING id, user_id`,
+            // 1️⃣ Récupérer le paiement (avec sécurité idempotente)
+            const paymentRes = await query(
+                `SELECT id, user_id, amount, mobile_number, status
+                 FROM payments
+                 WHERE transaction_id = $1`,
                 [ref_command]
             );
 
-            //  Correction TypeScript : vérification de null
-            if (updateResult && updateResult.rowCount && updateResult.rowCount > 0) {
-                const payment = updateResult.rows[0];
-
-                // Active l'abonnement
-                await query(
-                    `UPDATE subscriptions
-                     SET active = true, start_date = NOW()
-                     WHERE payment_id = $1`,
-                    [payment.id]
-                );
-
-                console.log(`  Paiement confirmé et abonnement activé pour user ${payment.user_id}`);
-            } else {
-                console.warn(`   Transaction ${ref_command} introuvable`);
+            if (paymentRes.rowCount === 0) {
+                console.warn("Transaction introuvable:", ref_command);
+                return NextResponse.json({ success: true });
             }
 
-        } else if (payment_status === "cancelled") {
-            // Paiement annulé
+            const payment = paymentRes.rows[0];
+
+            // ⛔ Déjà traité → stop
+            if (payment.status === "completed") {
+                console.log("Paiement déjà confirmé, SMS non renvoyé");
+                return NextResponse.json({ success: true });
+            }
+
+            // 2️⃣ Marquer paiement comme complété
+            await query(
+                `UPDATE payments
+                 SET status = 'completed', updated_at = NOW()
+                 WHERE id = $1`,
+                [payment.id]
+            );
+
+            // 3️⃣ Activer l’abonnement
+            await query(
+                `UPDATE subscriptions
+                 SET active = true, start_date = NOW()
+                 WHERE payment_id = $1`,
+                [payment.id]
+            );
+
+            // 4️⃣ Générer numéro de reçu
+            const receiptNumber = `REC-${Date.now()}`;
+
+            // 5️⃣ Construire le SMS
+            const smsMessage = `
+  Paiement confirmé
+
+Reçu : ${receiptNumber}
+Montant : ${payment.amount} CFA
+Service : Abonnement Chauffeur
+Réf : ${ref_command}
+
+Merci pour votre confiance.
+            `.trim();
+
+            // 6️⃣ Envoyer le SMS
+            if (payment.mobile_number) {
+                await sendSms(payment.mobile_number, smsMessage);
+                console.log("📩 Reçu SMS envoyé à", payment.mobile_number);
+            } else {
+                console.warn("⚠️ Aucun numéro de téléphone pour le paiement", payment.id);
+            }
+        }
+
+        // Paiement annulé
+        if (payment_status === "cancelled") {
             await query(
                 `UPDATE payments
                  SET status = 'cancelled', updated_at = NOW()
                  WHERE transaction_id = $1`,
                 [ref_command]
             );
-            console.log(`  Paiement ${ref_command} annulé`);
+            console.log("Paiement annulé:", ref_command);
         }
 
-        // Toujours retourner 200 OK à PayTech
-        return NextResponse.json({
-            success: true,
-            message: "Webhook traité"
-        });
+        // ⚠️ Toujours répondre 200 à PayTech
+        return NextResponse.json({ success: true });
 
     } catch (err: any) {
-        console.error("  Erreur webhook PayTech:", err);
+        console.error("❌ Erreur webhook PayTech:", err);
 
-        // Retourne quand même 200 pour éviter les retry de PayTech
-        return NextResponse.json({
-            success: false,
-            error: err.message
-        }, { status: 200 });
+        // ⚠️ Toujours 200 pour éviter retry infini
+        return NextResponse.json({ success: false }, { status: 200 });
     }
 }

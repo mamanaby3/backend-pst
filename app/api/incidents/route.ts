@@ -5,8 +5,7 @@
  *     summary: Récupérer la liste des incidents
  *     description: >
  *       Retourne les incidents avec recherche, pagination et tri par date de création.
- *     tags:
- *       - ADMIN
+ *     tags: [ADMIN]
 
  */
 /**

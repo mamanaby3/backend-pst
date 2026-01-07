@@ -3,7 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import axios from "axios";
 import { getUserFromRequest } from "@/lib/auth";
-
+/**
+ * @swagger
+ * /api/drivers/subscription:
+ *   post:
+ *     summary: Souscription a un abonnement suivie de paiement
+ *     tags: [CHAUFFEUR]
+ */
 export async function POST(request: NextRequest) {
     try {
         const user = await getUserFromRequest(request);
@@ -27,7 +33,7 @@ export async function POST(request: NextRequest) {
 
         // Vérification des clés PayTech
         if (!process.env.PAYTECH_API_KEY || !process.env.PAYTECH_API_SECRET) {
-            console.error("❌ Clés PayTech manquantes");
+            console.error("  Clés PayTech manquantes");
             return NextResponse.json({
                 success: false,
                 message: "Configuration PayTech manquante"
@@ -160,7 +166,7 @@ export async function POST(request: NextRequest) {
 
         // Vérifie la présence de l'URL ou du token
         if (!paytechData.redirect_url && !paytechData.token) {
-            console.error("❌ Pas d'URL de paiement reçue");
+            console.error("  Pas d'URL de paiement reçue");
             return NextResponse.json({
                 success: false,
                 message: "Aucune URL de paiement reçue"
