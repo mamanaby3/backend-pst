@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/806f7e36-2192-4e4f-b294-d4b58c1394ca/console.sql" value="806f7e36-2192-4e4f-b294-d4b58c1394ca" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/806f7e36-2192-4e4f-b294-d4b58c1394ca/console_1.sql" value="806f7e36-2192-4e4f-b294-d4b58c1394ca" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/afc414d6-2d65-4fab-84d9-e373252df773/console.sql" value="afc414d6-2d65-4fab-84d9-e373252df773" />
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/c058545f-c6d4-4013-9642-0606a36790dd/console.sql" value="c058545f-c6d4-4013-9642-0606a36790dd" />
     <file url="file://$PROJECT_DIR$/sql/add_schedule_to_schools.sql" value="806f7e36-2192-4e4f-b294-d4b58c1394ca" />
     <file url="file://$PROJECT_DIR$/sql/schema.sql" value="806f7e36-2192-4e4f-b294-d4b58c1394ca" />
   </component>

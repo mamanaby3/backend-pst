@@ -8,5 +8,19 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/PST_DB</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="postgres@aws-1-eu-central-1.pooler.supabase.com" uuid="afc414d6-2d65-4fab-84d9-e373252df773">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:6543/postgres</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
+    <data-source source="LOCAL" name="postgres@aws-1-eu-central-1.pooler.supabase.com [2]" uuid="c058545f-c6d4-4013-9642-0606a36790dd">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://aws-1-eu-central-1.pooler.supabase.com:5432/postgres</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
