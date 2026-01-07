@@ -5,7 +5,11 @@ import axios from "axios";
 import { getUserFromRequest } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
+    let paymentId: number | null = null;
+
     try {
+        console.log("🚀 DÉBUT - Subscription Request");
+
         const user = await getUserFromRequest(request);
         if (!user || user.role !== "driver") {
             return NextResponse.json({
@@ -14,8 +18,12 @@ export async function POST(request: NextRequest) {
             }, { status: 403 });
         }
 
+        console.log("✅ User authentifié:", user.id);
+
         const body = await request.json();
         const { plan_id, payment_method, mobile_provider, mobile_number } = body;
+
+        console.log("📝 Body reçu:", { plan_id, payment_method, mobile_provider, mobile_number });
 
         // Validation des données
         if (!plan_id || !payment_method) {
@@ -34,11 +42,13 @@ export async function POST(request: NextRequest) {
             }, { status: 500 });
         }
 
-        // Récupère le plan d'abonnement
+        // === QUERY 1 : Récupère le plan ===
+        console.log("🔍 QUERY 1: SELECT plan with id =", plan_id);
         const planRes = await query(
             `SELECT * FROM subscription_plans WHERE id = $1`,
             [plan_id]
         );
+        console.log("✅ QUERY 1: Success, rows =", planRes.rowCount);
 
         if (planRes.rowCount === 0) {
             return NextResponse.json({
@@ -53,42 +63,77 @@ export async function POST(request: NextRequest) {
         const random = Math.random().toString(36).substring(2, 8).toUpperCase();
         const transactionId = `PTC${timestamp}${random}`;
 
-        // Insère le paiement en statut "pending"
-        const paymentInsert = await query(
-            `INSERT INTO payments (
-                user_id, amount, status, method, payment_type,
-                transaction_id, payment_provider, mobile_number
-            ) VALUES ($1, $2, 'pending', $3, 'subscription', $4, $5, $6)
-                 RETURNING id`,
-            [
-                user.id,
-                plan.price,
-                payment_method,
-                transactionId,
-                mobile_provider || null,
-                mobile_number || null
-            ]
-        );
-        const paymentId = paymentInsert.rows[0].id;
+        console.log("🆔 Transaction ID:", transactionId);
 
-        // Insère l'abonnement (inactif en attendant confirmation)
-        // Utilise INTERVAL arithmétique pour compatibilité maximale
-        await query(
-            `INSERT INTO subscriptions (
-                user_id, plan_id, type, price, start_date,
-                end_date, active, payment_id
-            ) VALUES (
-                         $1, $2, $3, $4, CURRENT_DATE,
-                         CURRENT_DATE + INTERVAL '1 day' * $5,
-                         false, $6
-                     )`,
-            [user.id, plan_id, plan.name, plan.price, plan.duration_days, paymentId]
-        );
+        // === QUERY 2 : Insère le paiement ===
+        console.log("🔍 QUERY 2: INSERT payment");
+        console.log("Params:", {
+            user_id: user.id,
+            amount: plan.price,
+            method: payment_method,
+            transaction_id: transactionId,
+            provider: mobile_provider || null,
+            number: mobile_number || null
+        });
+
+        try {
+            const paymentInsert = await query(
+                `INSERT INTO payments (
+                    user_id, amount, status, method, payment_type,
+                    transaction_id, payment_provider, mobile_number
+                ) VALUES ($1, $2, 'pending', $3, 'subscription', $4, $5, $6)
+                     RETURNING id`,
+                [
+                    user.id,
+                    plan.price,
+                    payment_method,
+                    transactionId,
+                    mobile_provider || null,
+                    mobile_number || null
+                ]
+            );
+            paymentId = paymentInsert.rows[0].id;
+            console.log("✅ QUERY 2: Payment created, id =", paymentId);
+        } catch (err: any) {
+            console.error("❌ QUERY 2 FAILED:", err.message);
+            throw err;
+        }
+
+        // === QUERY 3 : Insère l'abonnement ===
+        console.log("🔍 QUERY 3: INSERT subscription");
+        console.log("Params:", {
+            user_id: user.id,
+            plan_id: plan_id,
+            type: plan.name,
+            price: plan.price,
+            duration_days: plan.duration_days,
+            payment_id: paymentId
+        });
+
+        try {
+            await query(
+                `INSERT INTO subscriptions (
+                    user_id, plan_id, type, price, start_date,
+                    end_date, active, payment_id
+                ) VALUES (
+                             $1, $2, $3, $4, CURRENT_DATE,
+                             CURRENT_DATE + INTERVAL '1 day' * $5,
+                             false, $6
+                         )`,
+                [user.id, plan_id, plan.name, plan.price, plan.duration_days, paymentId]
+            );
+            console.log("✅ QUERY 3: Subscription created");
+        } catch (err: any) {
+            console.error("❌ QUERY 3 FAILED:", err.message);
+            throw err;
+        }
 
         // Détermine l'URL de base
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
                 'http://localhost:3000');
+
+        console.log("🌐 Base URL:", baseUrl);
 
         // Prépare le payload pour PayTech
         const paytechPayload = {
@@ -114,8 +159,7 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        console.log("=== PAYTECH REQUEST ===");
-        console.log("Payload:", JSON.stringify(paytechPayload, null, 2));
+        console.log("📤 Calling PayTech API...");
 
         // Appel à l'API PayTech
         const paytechResponse = await axios.post(
@@ -131,14 +175,13 @@ export async function POST(request: NextRequest) {
             }
         );
 
-        console.log("=== PAYTECH RESPONSE ===");
-        console.log("Status:", paytechResponse.status);
+        console.log("✅ PayTech response status:", paytechResponse.status);
 
         const paytechData = paytechResponse.data;
 
         // Vérifie si PayTech a retourné une erreur
         if (paytechData.success === 0 || paytechData.success === false) {
-            console.error("❌ PayTech refus:", paytechData.message);
+            console.error("❌ PayTech refused:", paytechData.message);
 
             await query(
                 `UPDATE payments SET status = 'failed' WHERE id = $1`,
@@ -154,7 +197,7 @@ export async function POST(request: NextRequest) {
 
         // Vérifie la présence de l'URL ou du token
         if (!paytechData.redirect_url && !paytechData.token) {
-            console.error("❌ Pas d'URL de paiement reçue");
+            console.error("❌ No payment URL received");
             return NextResponse.json({
                 success: false,
                 message: "Aucune URL de paiement reçue"
@@ -165,21 +208,32 @@ export async function POST(request: NextRequest) {
         const paymentUrl = paytechData.redirect_url ||
             `https://paytech.sn/payment/checkout/${paytechData.token}`;
 
-        // Sauvegarde le metadata (méthode la plus compatible)
+        // === QUERY 4 : Sauvegarde le metadata (méthode compatible pooler) ===
         if (paytechData.token) {
-            const metadataJson = JSON.stringify({
-                paytech_token: paytechData.token,
-                payment_url: paymentUrl,
-                created_at: new Date().toISOString()
-            });
+            console.log("🔍 QUERY 4: UPDATE metadata");
+            console.log("Token:", paytechData.token);
+            console.log("Payment URL:", paymentUrl);
+            console.log("Payment ID:", paymentId);
 
-            await query(
-                `UPDATE payments SET metadata = $1::jsonb WHERE id = $2`,
-                [metadataJson, paymentId]
-            );
+            try {
+                // Méthode compatible avec pgBouncer Transaction Pooler
+                await query(
+                    `UPDATE payments
+                     SET metadata = '{"paytech_token": "' || $1 || '", "payment_url": "' || $2 || '"}'::jsonb
+                     WHERE id = $3`,
+                    [paytechData.token, paymentUrl, paymentId]
+                );
+                console.log("✅ QUERY 4: Metadata saved");
+            } catch (err: any) {
+                console.error("❌ QUERY 4 FAILED:", err.message);
+                console.error("Error code:", err.code);
+                console.error("Error detail:", err.detail);
+                // Ne pas faire échouer toute la requête si metadata échoue
+                console.warn("⚠️ Continuing without metadata...");
+            }
         }
 
-        console.log("✅ Paiement initié:", transactionId);
+        console.log("🎉 SUCCESS - Payment initiated:", transactionId);
 
         return NextResponse.json({
             success: true,
@@ -189,18 +243,34 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (err: any) {
-        console.error("=== ERREUR ===");
+        console.error("=== ERREUR GLOBALE ===");
         console.error("Message:", err.message);
+        console.error("Code:", err.code);
+        console.error("Stack:", err.stack);
 
         if (err.response) {
-            console.error("PayTech Status:", err.response.status);
-            console.error("PayTech Error:", err.response.data);
+            console.error("Axios Status:", err.response.status);
+            console.error("Axios Data:", err.response.data);
+        }
+
+        // Si un paiement a été créé mais qu'il y a eu une erreur après
+        if (paymentId) {
+            console.log("🔄 Marking payment as failed:", paymentId);
+            try {
+                await query(
+                    `UPDATE payments SET status = 'failed' WHERE id = $1`,
+                    [paymentId]
+                );
+            } catch (updateErr) {
+                console.error("Failed to update payment status:", updateErr);
+            }
         }
 
         return NextResponse.json({
             success: false,
-            message: err.response?.data?.message || err.message || "Erreur serveur",
-            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+            message: err.message || "Erreur serveur",
+            error_code: err.code,
+            details: process.env.NODE_ENV === 'development' ? err.stack : undefined
         }, { status: err.response?.status || 500 });
     }
 }

@@ -234,7 +234,7 @@ export async function PATCH(req: NextRequest, context: Params) {
         }
 
         const res = await query(
-            'UPDATE schools SET status=$1, updated_at=CURRENT_TIMESTAMP WHERE id=$2 RETURNING *',
+            'UPDATE schools SET status=$1 WHERE id=$2 RETURNING *',
             [status, numericId]
         );
 
