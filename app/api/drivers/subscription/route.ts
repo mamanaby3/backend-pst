@@ -99,8 +99,8 @@ export async function POST(request: NextRequest) {
         // Prépare le payload pour PayTech
         const paytechPayload = {
             item_name: `Abonnement ${plan.name}`.substring(0, 50),
-            item_price: Math.round(Number(plan.price)),
-            currency: "XOF",
+            item_price:  (Number(plan.price)),
+            currency: "CFA",
             ref_command: transactionId,
             command_name: `Sub ${plan.name} - User ${user.id}`.substring(0, 50),
             env: process.env.PAYTECH_ENV || "test",
