@@ -71,18 +71,24 @@ export async function POST(request: NextRequest) {
         );
         const paymentId = paymentInsert.rows[0].id;
 
-        // Insère l'abonnement (inactif en attendant confirmation)
-        // Utilise INTERVAL arithmétique pour compatibilité maximale
+
         await query(
             `INSERT INTO subscriptions (
-                user_id, plan_id, type, price, start_date,
-                end_date, active, payment_id
-            ) VALUES (
-                         $1, $2, $3, $4, CURRENT_DATE,
-                         CURRENT_DATE + INTERVAL '1 day' * $5,
-                         false, $6
-                     )`,
-            [user.id, plan_id, plan.name, plan.price, plan.duration_days, paymentId]
+        user_id, plan_id, type, price, start_date,
+        end_date, active, payment_id
+    ) VALUES (
+        $1, $2, $3, $4, CURRENT_DATE,
+        CURRENT_DATE + ($5::integer * INTERVAL '1 day'),
+        false, $6
+    )`,
+            [
+                user.id,
+                plan_id,
+                plan.name,
+                plan.price,
+                plan.duration_days,
+                paymentId
+            ]
         );
 
         // Détermine l'URL de base
@@ -138,7 +144,7 @@ export async function POST(request: NextRequest) {
 
         // Vérifie si PayTech a retourné une erreur
         if (paytechData.success === 0 || paytechData.success === false) {
-            console.error("❌ PayTech refus:", paytechData.message);
+            console.error("  PayTech refus:", paytechData.message);
 
             await query(
                 `UPDATE payments SET status = 'failed' WHERE id = $1`,
