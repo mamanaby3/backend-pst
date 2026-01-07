@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         const paytechPayload = {
             item_name: `Abonnement ${plan.name}`.substring(0, 50),
             item_price:  (Number(plan.price)),
-            currency: "CFA",
+            currency: "XOF",
             ref_command: transactionId,
             command_name: `Sub ${plan.name} - User ${user.id}`.substring(0, 50),
             env: process.env.PAYTECH_ENV || "test",
